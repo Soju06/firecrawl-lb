@@ -5,7 +5,8 @@ from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from typing import Protocol, TypeGuard
 
-from app.db.models import FirecrawlRequestLogRecord
+from app.core.crypto import TokenEncryptor
+from app.db.models import FirecrawlJobRecord, FirecrawlRequestLogRecord
 from app.modules.firecrawl.client import FirecrawlUpstreamResponse
 from app.modules.firecrawl.repository import FirecrawlRepository
 from app.modules.firecrawl.routing import NoFirecrawlAccountAvailable, select_account
@@ -25,8 +26,9 @@ class FirecrawlRequester(Protocol):
 
 
 class FirecrawlProxyService:
-    def __init__(self, repository: FirecrawlRepository) -> None:
+    def __init__(self, repository: FirecrawlRepository, encryptor: TokenEncryptor | None = None) -> None:
         self._repository = repository
+        self._encryptor = encryptor or TokenEncryptor()
 
     async def proxy(
         self,
@@ -59,7 +61,94 @@ class FirecrawlProxyService:
             credits_used=credits_used,
             latency_ms=latency_ms,
             now=now,
+            settle_success=True,
         )
+        await self._repository.commit()
+        return response
+
+    async def submit_job(
+        self,
+        endpoint: str,
+        path: str,
+        payload: dict[str, object],
+        client: FirecrawlRequester,
+        params: Mapping[str, str] | None = None,
+    ) -> FirecrawlUpstreamResponse:
+        accounts = await self._repository.list_accounts()
+        selected = select_account(accounts, endpoint, payload)
+        started = time.perf_counter()
+        response = await client.request(
+            "POST",
+            path,
+            api_key=selected.credential.api_key,
+            json=payload,
+            params=params,
+        )
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        now = datetime.now(UTC)
+        credits_used = estimate_credits(endpoint, payload, response.json_body)
+        status = _request_status(response.status)
+        upstream_job_id = _upstream_job_id(response.json_body)
+        await self._record_outcome(
+            account_id=selected.account.id,
+            credential_id=selected.credential.id,
+            endpoint=endpoint,
+            response=response,
+            status=status,
+            estimated_credits=selected.estimated_credits,
+            credits_used=credits_used,
+            latency_ms=latency_ms,
+            now=now,
+            settle_success=False,
+        )
+        if 200 <= response.status < 300 and upstream_job_id is not None:
+            self._repository.add_job_record(
+                FirecrawlJobRecord(
+                    account_id=selected.account.id,
+                    credential_id=selected.credential.id,
+                    endpoint=endpoint,
+                    upstream_job_id=upstream_job_id,
+                    status="submitted",
+                    estimated_credits_reserved=selected.estimated_credits,
+                )
+            )
+        await self._repository.commit()
+        return response
+
+    async def proxy_job_operation(
+        self,
+        *,
+        endpoint: str,
+        upstream_path: str,
+        upstream_job_id: str,
+        method: str,
+        client: FirecrawlRequester,
+    ) -> FirecrawlUpstreamResponse | None:
+        job = await self._repository.get_job_record(endpoint, upstream_job_id)
+        if job is None or job.credential is None:
+            return None
+        response = await client.request(
+            method,
+            upstream_path,
+            api_key=self._encryptor.decrypt(job.credential.api_key_encrypted),
+            json=None,
+        )
+        now = datetime.now(UTC)
+        if method == "GET" and 200 <= response.status < 300:
+            status = _job_status(response.json_body)
+            credits_used = _credits_used(response.json_body)
+            job.status = status or job.status
+            job.last_polled_at = now
+            if status is not None and _is_terminal_job_status(status) and credits_used is not None:
+                await self._repository.settle_job_once(
+                    job,
+                    status=status,
+                    credits_used=credits_used,
+                    completed_at=now,
+                )
+        elif method == "DELETE" and 200 <= response.status < 300:
+            job.status = _job_status(response.json_body) or "cancelled"
+            job.completed_at = now
         await self._repository.commit()
         return response
 
@@ -75,6 +164,7 @@ class FirecrawlProxyService:
         credits_used: int,
         latency_ms: int,
         now: datetime,
+        settle_success: bool,
     ) -> None:
         error_message = _error_message(response.json_body, response.text_body)
         await self._repository.record_request(
@@ -92,7 +182,7 @@ class FirecrawlProxyService:
                 error_message=error_message,
             )
         )
-        if 200 <= response.status < 300:
+        if 200 <= response.status < 300 and settle_success:
             await self._repository.apply_success(account_id, credits_used)
             return
         if response.status == 401:
@@ -159,6 +249,42 @@ def _upstream_job_id(json_body: dict[str, object] | None) -> str | None:
         if isinstance(value, str):
             return value
     return None
+
+
+def _job_status(json_body: dict[str, object] | None) -> str | None:
+    if json_body is None:
+        return None
+    value = json_body.get("status")
+    if isinstance(value, str):
+        return value
+    data = json_body.get("data")
+    if _is_string_object_mapping(data):
+        nested = data.get("status")
+        if isinstance(nested, str):
+            return nested
+    return None
+
+
+def _credits_used(json_body: dict[str, object] | None) -> int | None:
+    if json_body is None:
+        return None
+    value = json_body.get("creditsUsed")
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    data = json_body.get("data")
+    if _is_string_object_mapping(data):
+        nested = data.get("creditsUsed")
+        if isinstance(nested, bool):
+            return None
+        if isinstance(nested, int):
+            return nested
+    return None
+
+
+def _is_terminal_job_status(status: str) -> bool:
+    return status.lower() in {"completed", "complete", "finished", "failed", "cancelled", "canceled"}
 
 
 def _is_string_object_mapping(value: object) -> TypeGuard[Mapping[str, object]]:

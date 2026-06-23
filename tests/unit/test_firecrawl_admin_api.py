@@ -2,11 +2,20 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest_asyncio
 from httpx import AsyncClient
 
 from app.core.crypto import TokenEncryptor
 from app.db.models import FirecrawlAccountRecord, FirecrawlCredentialRecord
 from app.db.session import SessionLocal
+from app.modules.firecrawl import api as firecrawl_api
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _allow_firecrawl_admin(app_instance):
+    app_instance.dependency_overrides[firecrawl_api.require_firecrawl_admin] = lambda: None
+    yield
+    app_instance.dependency_overrides.pop(firecrawl_api.require_firecrawl_admin, None)
 
 
 async def test_admin_creates_lists_and_redacts_firecrawl_credentials(async_client: AsyncClient) -> None:

@@ -57,6 +57,12 @@ class FirecrawlClient:
                     text_body=await response.text(),
                 )
 
+    async def get_team_credit_usage(self, *, api_key: str) -> FirecrawlUpstreamResponse:
+        return await self.request("GET", "/v2/team/credit-usage", api_key=api_key)
+
+    async def get_team_queue_status(self, *, api_key: str) -> FirecrawlUpstreamResponse:
+        return await self.request("GET", "/v2/team/queue-status", api_key=api_key)
+
 
 def _is_json_response(headers: Mapping[str, str]) -> bool:
     content_type = headers.get("content-type") or headers.get("Content-Type") or ""

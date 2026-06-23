@@ -29,13 +29,11 @@ from app.core.metrics.prometheus import MULTIPROCESS_MODE, PROMETHEUS_AVAILABLE,
 from app.core.middleware import (
     add_api_firewall_middleware,
     add_app_version_middleware,
-    add_backend_api_codex_v1_alias_middleware,
     add_dashboard_auth_proxy_middleware,
     add_request_decompression_middleware,
     add_request_id_middleware,
 )
 from app.core.middleware.inflight import InFlightMiddleware
-from app.core.openai.model_refresh_scheduler import build_model_refresh_scheduler
 from app.core.resilience.backpressure import BackpressureMiddleware
 from app.core.resilience.bulkhead import BulkheadMiddleware, get_bulkhead
 from app.core.resilience.memory_monitor import configure as configure_memory_monitor
@@ -49,10 +47,9 @@ from app.modules.conversation_archive import api as conversation_archive_api
 from app.modules.dashboard import api as dashboard_api
 from app.modules.dashboard_auth import api as dashboard_auth_api
 from app.modules.firecrawl import api as firecrawl_api
+from app.modules.firecrawl.refresh import build_firecrawl_refresh_scheduler
 from app.modules.firewall import api as firewall_api
 from app.modules.health import api as health_api
-from app.modules.oauth import api as oauth_api
-from app.modules.proxy import api as proxy_api
 from app.modules.proxy.durable_bridge_repository import missing_durable_bridge_tables
 from app.modules.proxy.rate_limit_cache import get_rate_limit_headers_cache
 from app.modules.proxy.ring_membership import (
@@ -146,12 +143,12 @@ async def lifespan(app: FastAPI):
         startup_module.mark_bridge_durable_schema_ready()
     usage_scheduler = build_usage_refresh_scheduler()
     api_key_limit_reset_scheduler = build_api_key_limit_reset_scheduler()
-    model_scheduler = build_model_refresh_scheduler()
+    firecrawl_refresh_scheduler = build_firecrawl_refresh_scheduler()
     sticky_session_cleanup_scheduler = build_sticky_session_cleanup_scheduler()
     quota_planner_scheduler = build_quota_planner_scheduler()
     await usage_scheduler.start()
     await api_key_limit_reset_scheduler.start()
-    await model_scheduler.start()
+    await firecrawl_refresh_scheduler.start()
     await sticky_session_cleanup_scheduler.start()
     await quota_planner_scheduler.start()
     if settings.metrics_enabled and PROMETHEUS_AVAILABLE:
@@ -253,9 +250,10 @@ async def lifespan(app: FastAPI):
     ring_service: RingMembershipService | None = None
     instance_id: str | None = None
     heartbeat_task: asyncio.Task[None] | None = None
-    ring_service = RingMembershipService(SessionLocal)
-    instance_id = settings.http_responses_session_bridge_instance_id
-    heartbeat_task = asyncio.create_task(_register_and_heartbeat(ring_service, instance_id))
+    if settings.http_responses_session_bridge_enabled:
+        ring_service = RingMembershipService(SessionLocal)
+        instance_id = settings.http_responses_session_bridge_instance_id
+        heartbeat_task = asyncio.create_task(_register_and_heartbeat(ring_service, instance_id))
     startup_module._startup_complete = True
 
     try:
@@ -310,7 +308,7 @@ async def lifespan(app: FastAPI):
         await cache_poller.stop()
         await quota_planner_scheduler.stop()
         await sticky_session_cleanup_scheduler.stop()
-        await model_scheduler.stop()
+        await firecrawl_refresh_scheduler.stop()
         await api_key_limit_reset_scheduler.stop()
         await usage_scheduler.stop()
         try:
@@ -368,19 +366,9 @@ def create_app() -> FastAPI:
             dashboard_limit=settings.bulkhead_dashboard_limit,
         ),
     )
-    add_backend_api_codex_v1_alias_middleware(app)
     add_app_version_middleware(app)
     add_exception_handlers(app)
 
-    app.include_router(proxy_api.router)
-    app.include_router(proxy_api.internal_router)
-    app.include_router(proxy_api.ws_router)
-    app.include_router(proxy_api.wham_router)
-    app.include_router(proxy_api.v1_router)
-    app.include_router(proxy_api.v1_ws_router)
-    app.include_router(proxy_api.transcribe_router)
-    app.include_router(proxy_api.files_router)
-    app.include_router(proxy_api.usage_router)
     app.include_router(firecrawl_api.router)
     app.include_router(audit_api.router)
     app.include_router(accounts_api.router)
@@ -390,7 +378,6 @@ def create_app() -> FastAPI:
     app.include_router(quota_planner_api.router)
     app.include_router(conversation_archive_api.router)
     app.include_router(runtime_api.router)
-    app.include_router(oauth_api.router)
     app.include_router(dashboard_auth_api.router)
     app.include_router(settings_api.router)
     app.include_router(firewall_api.router)

@@ -10,6 +10,7 @@ from app.core.crypto import TokenEncryptor
 from app.db.models import (
     FirecrawlAccountRecord,
     FirecrawlCredentialRecord,
+    FirecrawlJobRecord,
     FirecrawlRequestLogRecord,
 )
 from app.modules.firecrawl.models import (
@@ -53,11 +54,23 @@ class FirecrawlRepository:
     async def get_credential_record(self, credential_id: str) -> FirecrawlCredentialRecord | None:
         return await self._session.get(FirecrawlCredentialRecord, credential_id)
 
+    async def get_job_record(self, endpoint: str, upstream_job_id: str) -> FirecrawlJobRecord | None:
+        result = await self._session.execute(
+            select(FirecrawlJobRecord)
+            .options(selectinload(FirecrawlJobRecord.credential))
+            .where(FirecrawlJobRecord.endpoint == endpoint)
+            .where(FirecrawlJobRecord.upstream_job_id == upstream_job_id)
+        )
+        return result.scalars().unique().one_or_none()
+
     def add_account_record(self, account: FirecrawlAccountRecord) -> None:
         self._session.add(account)
 
     def add_credential_record(self, credential: FirecrawlCredentialRecord) -> None:
         self._session.add(credential)
+
+    def add_job_record(self, job: FirecrawlJobRecord) -> None:
+        self._session.add(job)
 
     async def record_request(
         self,
@@ -74,6 +87,23 @@ class FirecrawlRepository:
         if account.status == FirecrawlAccountStatus.RATE_LIMITED.value:
             account.status = FirecrawlAccountStatus.ACTIVE.value
             account.cooldown_until = None
+
+    async def settle_job_once(
+        self,
+        job: FirecrawlJobRecord,
+        *,
+        status: str,
+        credits_used: int,
+        completed_at: datetime,
+    ) -> None:
+        job.status = status
+        job.completed_at = completed_at
+        job.last_polled_at = completed_at
+        if job.credits_used_final is not None:
+            return
+        job.credits_used_final = credits_used
+        if job.account_id is not None:
+            await self.apply_success(job.account_id, credits_used)
 
     async def mark_credential_invalid(self, credential_id: str, message: str | None, at: datetime) -> None:
         credential = await self._session.get(FirecrawlCredentialRecord, credential_id)
@@ -94,6 +124,39 @@ class FirecrawlRepository:
             return
         account.status = FirecrawlAccountStatus.RATE_LIMITED.value
         account.cooldown_until = cooldown_until
+
+    async def update_account_refresh_success(
+        self,
+        account: FirecrawlAccountRecord,
+        *,
+        remaining_credits: int | None,
+        plan_credits: int | None,
+        billing_period_start: datetime | None,
+        billing_period_end: datetime | None,
+        queue_active_jobs: int | None,
+        queue_max_concurrency: int | None,
+        refreshed_at: datetime,
+    ) -> None:
+        if remaining_credits is not None:
+            account.remaining_credits_live = remaining_credits
+        if plan_credits is not None:
+            account.plan_credits_live = plan_credits
+        if billing_period_start is not None:
+            account.billing_period_start = billing_period_start
+        if billing_period_end is not None:
+            account.billing_period_end = billing_period_end
+        if queue_active_jobs is not None:
+            account.queue_active_jobs = queue_active_jobs
+        if queue_max_concurrency is not None:
+            account.queue_max_concurrency = queue_max_concurrency
+        account.last_usage_refresh_at = refreshed_at
+        account.last_queue_refresh_at = refreshed_at
+        account.last_refresh_error_at = None
+        account.last_refresh_error_message = None
+
+    async def mark_account_refresh_error(self, account: FirecrawlAccountRecord, message: str, at: datetime) -> None:
+        account.last_refresh_error_at = at
+        account.last_refresh_error_message = message
 
     async def commit(self) -> None:
         await self._session.commit()

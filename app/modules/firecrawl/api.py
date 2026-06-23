@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth.dashboard_mode import get_dashboard_request_auth
+from app.core.auth.dependencies import validate_dashboard_session
+from app.core.exceptions import DashboardAuthError
 from app.db.session import get_session
+from app.modules.dashboard_auth.service import DASHBOARD_SESSION_COOKIE
 from app.modules.firecrawl.admin_service import (
     FirecrawlAccountConflictError,
     FirecrawlAccountNotFoundError,
@@ -14,7 +18,7 @@ from app.modules.firecrawl.admin_service import (
     FirecrawlCredentialConflictError,
     FirecrawlCredentialNotFoundError,
 )
-from app.modules.firecrawl.client import create_firecrawl_client
+from app.modules.firecrawl.client import FirecrawlUpstreamResponse, create_firecrawl_client
 from app.modules.firecrawl.repository import FirecrawlRepository
 from app.modules.firecrawl.routing import NoFirecrawlAccountAvailable
 from app.modules.firecrawl.schemas import (
@@ -41,10 +45,18 @@ def get_firecrawl_admin_service(
     return FirecrawlAdminService(repository)
 
 
+async def require_firecrawl_admin(request: Request) -> None:
+    await validate_dashboard_session(request)
+    if get_dashboard_request_auth(request) is None and not request.cookies.get(DASHBOARD_SESSION_COOKIE):
+        raise DashboardAuthError("Authentication is required")
+
+
 @router.get("/admin/firecrawl/accounts", response_model=FirecrawlAccountsResponse)
 async def list_admin_firecrawl_accounts(
+    _admin: None = Depends(require_firecrawl_admin),
     service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
 ) -> FirecrawlAccountsResponse:
+    del _admin
     return await service.list_accounts()
 
 
@@ -55,8 +67,10 @@ async def list_admin_firecrawl_accounts(
 )
 async def create_admin_firecrawl_account(
     payload: FirecrawlAccountCreateRequest,
+    _admin: None = Depends(require_firecrawl_admin),
     service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
 ) -> FirecrawlAccountResponse:
+    del _admin
     try:
         return await service.create_account(payload)
     except FirecrawlAccountConflictError as exc:
@@ -66,8 +80,10 @@ async def create_admin_firecrawl_account(
 @router.get("/admin/firecrawl/accounts/{account_id}", response_model=FirecrawlAccountResponse)
 async def get_admin_firecrawl_account(
     account_id: str,
+    _admin: None = Depends(require_firecrawl_admin),
     service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
 ) -> FirecrawlAccountResponse:
+    del _admin
     try:
         return await service.get_account(account_id)
     except FirecrawlAccountNotFoundError as exc:
@@ -78,8 +94,10 @@ async def get_admin_firecrawl_account(
 async def update_admin_firecrawl_account(
     account_id: str,
     payload: FirecrawlAccountUpdateRequest,
+    _admin: None = Depends(require_firecrawl_admin),
     service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
 ) -> FirecrawlAccountResponse:
+    del _admin
     try:
         return await service.update_account(account_id, payload)
     except FirecrawlAccountNotFoundError as exc:
@@ -94,8 +112,10 @@ async def update_admin_firecrawl_account(
 async def create_admin_firecrawl_credential(
     account_id: str,
     payload: FirecrawlCredentialCreateRequest,
+    _admin: None = Depends(require_firecrawl_admin),
     service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
 ) -> FirecrawlCredentialResponse:
+    del _admin
     try:
         return await service.create_credential(account_id, payload)
     except FirecrawlAccountNotFoundError as exc:
@@ -112,8 +132,10 @@ async def update_admin_firecrawl_credential(
     account_id: str,
     credential_id: str,
     payload: FirecrawlCredentialUpdateRequest,
+    _admin: None = Depends(require_firecrawl_admin),
     service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
 ) -> FirecrawlCredentialResponse:
+    del _admin
     try:
         return await service.update_credential(account_id, credential_id, payload)
     except FirecrawlAccountNotFoundError as exc:
@@ -137,6 +159,57 @@ async def search(request: Request, repository: FirecrawlRepository = Depends(get
     return await _proxy_firecrawl_request("search", request, repository)
 
 
+@router.post("/crawl")
+async def submit_crawl(
+    request: Request,
+    repository: FirecrawlRepository = Depends(get_firecrawl_repository),
+) -> Response:
+    return await _submit_firecrawl_job("crawl", "/v2/crawl", request, repository)
+
+
+@router.post("/batch/scrape")
+async def submit_batch_scrape(
+    request: Request,
+    repository: FirecrawlRepository = Depends(get_firecrawl_repository),
+) -> Response:
+    return await _submit_firecrawl_job("batch_scrape", "/v2/batch/scrape", request, repository)
+
+
+@router.get("/crawl/{job_id}")
+async def get_crawl_job(job_id: str, repository: FirecrawlRepository = Depends(get_firecrawl_repository)) -> Response:
+    return await _proxy_firecrawl_job_operation("crawl", f"/v2/crawl/{job_id}", job_id, "GET", repository)
+
+
+@router.get("/batch/scrape/{job_id}")
+async def get_batch_scrape_job(
+    job_id: str,
+    repository: FirecrawlRepository = Depends(get_firecrawl_repository),
+) -> Response:
+    return await _proxy_firecrawl_job_operation("batch_scrape", f"/v2/batch/scrape/{job_id}", job_id, "GET", repository)
+
+
+@router.delete("/crawl/{job_id}")
+async def cancel_crawl_job(
+    job_id: str,
+    repository: FirecrawlRepository = Depends(get_firecrawl_repository),
+) -> Response:
+    return await _proxy_firecrawl_job_operation("crawl", f"/v2/crawl/{job_id}", job_id, "DELETE", repository)
+
+
+@router.delete("/batch/scrape/{job_id}")
+async def cancel_batch_scrape_job(
+    job_id: str,
+    repository: FirecrawlRepository = Depends(get_firecrawl_repository),
+) -> Response:
+    return await _proxy_firecrawl_job_operation(
+        "batch_scrape",
+        f"/v2/batch/scrape/{job_id}",
+        job_id,
+        "DELETE",
+        repository,
+    )
+
+
 async def _proxy_firecrawl_request(endpoint: str, request: Request, repository: FirecrawlRepository) -> Response:
     payload = await request.json()
     if not isinstance(payload, dict):
@@ -151,6 +224,59 @@ async def _proxy_firecrawl_request(endpoint: str, request: Request, repository: 
         )
     except NoFirecrawlAccountAvailable as exc:
         return JSONResponse(status_code=503, content=no_account_response(exc))
+    if upstream.json_body is not None:
+        return JSONResponse(status_code=upstream.status, content=upstream.json_body)
+    return Response(
+        content=upstream.text_body or "",
+        status_code=upstream.status,
+        media_type=_response_media_type(upstream.headers),
+    )
+
+
+async def _submit_firecrawl_job(
+    endpoint: str,
+    path: str,
+    request: Request,
+    repository: FirecrawlRepository,
+) -> Response:
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="Firecrawl request body must be a JSON object")
+    service = FirecrawlProxyService(repository)
+    try:
+        upstream = await service.submit_job(
+            endpoint,
+            path,
+            payload,
+            create_firecrawl_client(),
+            params=_string_query_params(request.query_params),
+        )
+    except NoFirecrawlAccountAvailable as exc:
+        return JSONResponse(status_code=503, content=no_account_response(exc))
+    return _upstream_response(upstream)
+
+
+async def _proxy_firecrawl_job_operation(
+    endpoint: str,
+    path: str,
+    job_id: str,
+    method: str,
+    repository: FirecrawlRepository,
+) -> Response:
+    service = FirecrawlProxyService(repository)
+    upstream = await service.proxy_job_operation(
+        endpoint=endpoint,
+        upstream_path=path,
+        upstream_job_id=job_id,
+        method=method,
+        client=create_firecrawl_client(),
+    )
+    if upstream is None:
+        raise HTTPException(status_code=404, detail="Firecrawl job not found")
+    return _upstream_response(upstream)
+
+
+def _upstream_response(upstream: FirecrawlUpstreamResponse) -> Response:
     if upstream.json_body is not None:
         return JSONResponse(status_code=upstream.status, content=upstream.json_body)
     return Response(

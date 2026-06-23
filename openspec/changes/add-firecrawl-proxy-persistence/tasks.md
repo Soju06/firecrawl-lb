@@ -31,3 +31,19 @@
 - [x] Run ruff on changed app/test paths.
 - [x] Run ty on changed app/test paths.
 - [x] Run strict OpenSpec validation.
+
+## 6. Cutover slice
+
+- [x] Specify Firecrawl team refresh, admin guard, job ownership/settlement, and old-route removal behavior.
+- [x] Add RED tests for team credit/queue refresh persistence.
+- [x] Add RED tests for Firecrawl admin auth dependency override and public proxy openness.
+- [x] Add RED tests for `/v2/crawl` and `/v2/batch/scrape` submit/status/cancel ownership and one-time settlement.
+- [x] Add RED tests that old OpenAI/OAuth runtime routes are absent.
+- [x] Implement refresh client/service/scheduler wiring without real network calls in tests.
+- [x] Implement job proxy routes and original-account settlement.
+- [x] Remove old OpenAI/OAuth/WebSocket routers from app wiring while keeping shared app infrastructure bootable.
+- [x] Rewrite README for firecrawl-lb operation.
+- [x] Run targeted pytest.
+- [x] Run ruff on changed app/test paths.
+- [x] Run ty on changed app/test paths.
+- [x] Run strict OpenSpec validation.

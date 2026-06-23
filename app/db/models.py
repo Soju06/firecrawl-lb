@@ -371,6 +371,8 @@ class FirecrawlAccountRecord(Base):
     cooldown_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_usage_refresh_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_queue_refresh_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_refresh_error_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_refresh_error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
