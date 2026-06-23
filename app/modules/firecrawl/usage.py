@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from math import ceil
-from typing import Any
+from typing import Any, cast
 
 JsonObject = Mapping[str, Any]
 
@@ -104,7 +104,8 @@ def _normalized_scrape_formats(formats: object) -> set[str]:
         if isinstance(item, str):
             normalized.add(item)
         elif isinstance(item, Mapping):
-            format_type = item.get("type")
+            item_mapping = cast(Mapping[str, Any], item)
+            format_type = item_mapping.get("type")
             if isinstance(format_type, str):
                 normalized.add(format_type)
     return normalized or {"markdown"}
@@ -112,11 +113,11 @@ def _normalized_scrape_formats(formats: object) -> set[str]:
 
 def _int_value(value: object, *, default: int) -> int:
     if _is_plain_int(value):
-        return value
+        return cast(int, value)
     if isinstance(value, str):
         return int(value)
     return default
 
 
 def _is_plain_int(value: object) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool)
+    return type(value) is int
