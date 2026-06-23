@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const THEME_STORAGE_KEY = "codex-lb-theme";
+const THEME_STORAGE_KEY = "firecrawl-lb-theme";
 
 export type ThemePreference = "light" | "dark" | "auto";
 export type ResolvedTheme = "light" | "dark";

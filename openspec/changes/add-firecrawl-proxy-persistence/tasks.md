@@ -56,3 +56,12 @@
 - [x] Replace old dashboard routes with Firecrawl overview, accounts, jobs, logs, and settings pages.
 - [x] Run frontend typecheck and build.
 - [x] Run targeted backend pytest, ruff, ty, and OpenSpec validation.
+
+## 8. Codex/OpenAI residue cleanup
+
+- [x] Delete old backend Codex/OpenAI/OAuth/API-key/dashboard/usage/request-log/quota/sticky-session/conversation/limit-warmup modules.
+- [x] Remove deleted backend router, scheduler, cache, bridge, ring-membership, and usage-registry wiring from `app/main.py`.
+- [x] Delete old backend tests that import deleted modules while keeping Firecrawl tests.
+- [x] Delete old frontend Codex dashboard/accounts/API/firewall/sticky/quota/conversation feature areas and integration tests.
+- [x] Trim frontend mocks, auth branding, shared status/runtime/settings references, and old hook/component imports.
+- [x] Run backend and frontend verification for the cleanup slice.

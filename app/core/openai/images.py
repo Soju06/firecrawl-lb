@@ -4,9 +4,9 @@ These schemas describe the *public* surface that codex-lb exposes. They mirror
 the OpenAI Images API request shape so SDKs (e.g. ``openai`` Python client,
 the codex CLI image fallback) can target codex-lb without modification.
 
-The endpoints themselves are implemented as a thin translation layer over
-``/v1/responses`` with the built-in ``image_generation`` tool — see
-``app.modules.proxy.images_service``.
+The former proxy image endpoints were removed during the Firecrawl cutover, but
+these schema helpers remain in core for compatibility with retained validation
+utilities.
 
 Per-model validation matrix (kept here so request validation rejects the
 request *before* any upstream call is opened):

@@ -16,6 +16,6 @@ describe("useTimeFormatStore", () => {
     useTimeFormatStore.getState().setTimeFormat("24h");
 
     expect(getTimeFormatPreference()).toBe("24h");
-    expect(window.localStorage.getItem("codex-lb-time-format")).toBe("24h");
+    expect(window.localStorage.getItem("firecrawl-lb-time-format")).toBe("24h");
   });
 });

@@ -19,12 +19,9 @@ os.environ["FIRECRAWL_LB_DATABASE_URL"] = os.environ.get(
 os.environ["FIRECRAWL_LB_UPSTREAM_BASE_URL"] = "https://example.invalid/backend-api"
 os.environ["FIRECRAWL_LB_USAGE_REFRESH_ENABLED"] = "false"
 os.environ["FIRECRAWL_LB_MODEL_REGISTRY_ENABLED"] = "false"
-os.environ["FIRECRAWL_LB_STICKY_SESSION_CLEANUP_ENABLED"] = "false"
-os.environ["FIRECRAWL_LB_HTTP_RESPONSES_SESSION_BRIDGE_ENABLED"] = "false"
-os.environ["FIRECRAWL_LB_QUOTA_PLANNER_SCHEDULER_ENABLED"] = "false"
 
 from app.db.models import Base  # noqa: E402
-from app.db.session import engine  # noqa: E402
+from app.db.session import close_db, engine  # noqa: E402
 from app.main import create_app  # noqa: E402
 
 
@@ -33,20 +30,14 @@ def _drop_test_migration_tables(sync_conn) -> None:
     sync_conn.execute(text("DROP TABLE IF EXISTS schema_migrations"))
 
 
-def _recreate_test_schema(sync_conn) -> None:
+def _reset_test_database(sync_conn) -> None:
     _drop_test_migration_tables(sync_conn)
     Base.metadata.drop_all(sync_conn)
     Base.metadata.create_all(sync_conn)
 
 
-def _reset_test_database(sync_conn) -> None:
-    _recreate_test_schema(sync_conn)
-
-
 @pytest_asyncio.fixture
 async def _reset_db_state():
-    from app.db.session import close_db
-
     await close_db()
     async with engine.begin() as conn:
         await conn.run_sync(_reset_test_database)
@@ -62,8 +53,7 @@ async def app_instance(_reset_db_state, monkeypatch):
         return None
 
     monkeypatch.setattr(main_module, "init_db", _noop_init_db)
-    app = create_app()
-    return app
+    return create_app()
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -97,64 +87,17 @@ def temp_key_file(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _reset_model_registry():
-    from app.core.openai.model_registry import get_model_registry
+def _reset_runtime_caches():
+    try:
+        from app.core.middleware.firewall_cache import get_firewall_ip_cache
 
-    registry = get_model_registry()
-    registry._snapshot = None
+        get_firewall_ip_cache().invalidate_all()
+    except Exception:
+        pass
     yield
-    registry._snapshot = None
-
-
-@pytest.fixture(autouse=True)
-def _reset_codex_version_cache():
-    from app.core.clients.codex_version import get_codex_version_cache
-
-    cache = get_codex_version_cache()
-    cache._cached_version = None
-    cache._cached_at = 0.0
-    yield
-    cache._cached_version = None
-    cache._cached_at = 0.0
-
-
-def _reset_global_state() -> None:
-    """Reset global singletons that leak between tests."""
     try:
-        from app.core.auth.api_key_cache import get_api_key_cache
+        from app.core.middleware.firewall_cache import get_firewall_ip_cache
 
-        get_api_key_cache().clear()
+        get_firewall_ip_cache().invalidate_all()
     except Exception:
         pass
-    try:
-        from app.core.middleware.firewall_cache import get_firewall_ip_cache as get_firewall_cache
-
-        get_firewall_cache().invalidate_all()
-    except Exception:
-        pass
-    try:
-        from app.modules.proxy.account_cache import get_account_selection_cache
-
-        get_account_selection_cache().invalidate()
-    except Exception:
-        pass
-    try:
-        from app.core.resilience.degradation import set_normal
-
-        set_normal()
-    except Exception:
-        pass
-    try:
-        from app.core.shutdown import set_bridge_drain_active
-
-        set_bridge_drain_active(False)
-    except Exception:
-        pass
-
-
-@pytest.fixture(autouse=True)
-def _reset_hot_path_caches():
-    """Reset T20 hot-path caches between tests to prevent state leakage."""
-    _reset_global_state()
-    yield
-    _reset_global_state()

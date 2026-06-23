@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const TIME_FORMAT_STORAGE_KEY = "codex-lb-time-format";
+const TIME_FORMAT_STORAGE_KEY = "firecrawl-lb-time-format";
 
 export type TimeFormatPreference = "12h" | "24h";
 
