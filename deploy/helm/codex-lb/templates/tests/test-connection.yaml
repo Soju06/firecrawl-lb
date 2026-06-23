@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ printf "%s-test-connection" (include "codex-lb.fullname" . | trunc 47 | trimSuffix "-") }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "codex-lb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  enableServiceLinks: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  {{- with (include "codex-lb.globalNodeSelector" .) }}
+  nodeSelector:
+    {{- . | nindent 4 }}
+  {{- end }}
+  containers:
+    - name: test-health
+      image: {{ printf "%s/library/busybox:1.37" (.Values.global.imageRegistry | default "docker.io") }}
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      command:
+        - sh
+        - -c
+        - |
+          echo "=== Health endpoint ==="
+          wget --spider --timeout=10 http://{{ include "codex-lb.fullname" . }}:{{ .Values.service.port | default 2455 }}/health || exit 1
+          echo "Health check passed!"
+
+          echo "=== Startup probe ==="
+          wget -qO- --timeout=10 http://{{ include "codex-lb.fullname" . }}:{{ .Values.service.port | default 2455 }}/health/ready || exit 1
+          echo "Readiness check passed!"

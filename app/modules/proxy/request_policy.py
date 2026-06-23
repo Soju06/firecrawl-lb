@@ -1,0 +1,486 @@
+from __future__ import annotations
+
+import logging
+
+from pydantic import ValidationError
+
+from app.core.errors import OpenAIErrorEnvelope, openai_error
+from app.core.exceptions import ProxyModelNotAllowed
+from app.core.openai.exceptions import ClientPayloadError
+from app.core.openai.model_registry import ModelRegistry, get_model_registry
+from app.core.openai.requests import ResponsesCompactRequest, ResponsesReasoning, ResponsesRequest
+from app.core.openai.strict_schema import (
+    validate_strict_function_tool_schema,
+    validate_strict_json_schema,
+)
+from app.core.openai.v1_requests import V1ResponsesRequest
+from app.core.types import JsonValue
+from app.core.utils.request_id import get_request_id
+from app.modules.api_keys.service import ApiKeyData
+
+logger = logging.getLogger(__name__)
+
+# Reasoning efforts that the upstream ChatGPT/Codex backend silently drops
+# (the WebSocket never produces ``response.completed``). When a client sends
+# one of these we transparently rewrite it to a value the resolved model
+# advertises in its ``supported_reasoning_levels`` so the request does not
+# hang. ``minimal`` is a valid value on the OpenAI Platform Responses API for
+# GPT-5 family models, but the ChatGPT backend codex-lb proxies to does not
+# accept it as of 2026-04. See https://github.com/Soju06/codex-lb/issues/493
+_UNSUPPORTED_UPSTREAM_REASONING_EFFORTS: frozenset[str] = frozenset({"minimal"})
+_DEFAULT_REASONING_EFFORT_FALLBACK = "low"
+
+# Cursor exposes GPT-5 family model labels with UI suffixes such as "Extra
+# High Fast". The ChatGPT/Codex upstream accepts the canonical GPT-5-family
+# slug plus request fields, not those synthetic suffixes in the model name.
+# Keep this deliberately narrow: only strip known Cursor-style suffix tokens
+# from known GPT-5 base model slugs, and leave every other model untouched.
+_GPT5_ALIAS_BASE_MODELS: tuple[str, ...] = (
+    "gpt-5.4-mini",
+    "gpt-5.3-codex",
+    "gpt-5.2-codex",
+    "gpt-5.1-codex-max",
+    "gpt-5.1-codex-mini",
+    "gpt-5.1-codex",
+    "gpt-5-codex",
+    "gpt-5.5",
+    "gpt-5.4",
+    "gpt-5.3",
+    "gpt-5.2",
+    "gpt-5.1",
+    "gpt-5",
+)
+_MODEL_ALIAS_REASONING_TOKENS: dict[str, str] = {
+    "minimal": "minimal",
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "xhigh": "high",
+    "extra": "high",
+}
+_MODEL_ALIAS_REASONING_RANK: dict[str, int] = {"minimal": 0, "low": 1, "medium": 2, "high": 3}
+_MODEL_ALIAS_SERVICE_TIER_TOKENS: dict[str, str] = {
+    "fast": "priority",
+    "priority": "priority",
+}
+_MODEL_ALIAS_IGNORED_TOKENS: frozenset[str] = frozenset({"reasoning", "thinking"})
+_MODEL_ALIAS_TOKENS: frozenset[str] = frozenset(
+    {
+        *tuple(_MODEL_ALIAS_REASONING_TOKENS),
+        *tuple(_MODEL_ALIAS_SERVICE_TIER_TOKENS),
+        *tuple(_MODEL_ALIAS_IGNORED_TOKENS),
+    }
+)
+
+# Service tier values codex-lb accepts at the API-key surface but that the
+# ChatGPT/Codex backend rejects with ``Unsupported service_tier: <value>``.
+# Semantically both ``auto`` and ``default`` mean "let upstream pick" -- the
+# same thing as omitting the field entirely -- so when an enforced API-key
+# policy resolves to one of these, we forward the request without a
+# ``service_tier`` instead of sending a literal that fails upstream. See
+# https://github.com/Soju06/codex-lb/issues/546
+_UPSTREAM_OMIT_SERVICE_TIERS: frozenset[str] = frozenset({"auto", "default"})
+
+
+def validate_model_access(api_key: ApiKeyData | None, model: str | None) -> None:
+    if api_key is None:
+        return
+    if not api_key.allowed_models:
+        return
+    allowed_models = {resolve_model_alias(allowed_model) for allowed_model in api_key.allowed_models}
+    effective_model = resolve_model_alias(model)
+    if model is None or effective_model in allowed_models:
+        return
+    raise ProxyModelNotAllowed(f"This API key does not have access to model '{model}'")
+
+
+def apply_api_key_enforcement(
+    payload: ResponsesRequest | ResponsesCompactRequest,
+    api_key: ApiKeyData | None,
+) -> None:
+    normalize_upstream_model_alias(payload)
+
+    if api_key is None:
+        normalize_unsupported_reasoning_effort(payload)
+        return
+
+    if api_key.enforced_model and payload.model != api_key.enforced_model:
+        logger.info(
+            "api_key_model_enforced request_id=%s key_id=%s requested_model=%s enforced_model=%s",
+            get_request_id(),
+            api_key.id,
+            payload.model,
+            api_key.enforced_model,
+        )
+        payload.model = api_key.enforced_model
+        normalize_upstream_model_alias(payload)
+
+    if api_key.enforced_reasoning_effort is not None:
+        requested_effort = payload.reasoning.effort if payload.reasoning else None
+        if payload.reasoning is None:
+            payload.reasoning = ResponsesReasoning(effort=api_key.enforced_reasoning_effort)
+        else:
+            payload.reasoning.effort = api_key.enforced_reasoning_effort
+        if requested_effort != api_key.enforced_reasoning_effort:
+            logger.info(
+                "api_key_reasoning_enforced request_id=%s key_id=%s requested_effort=%s enforced_effort=%s",
+                get_request_id(),
+                api_key.id,
+                requested_effort,
+                api_key.enforced_reasoning_effort,
+            )
+
+    normalize_unsupported_reasoning_effort(payload)
+
+    if api_key.enforced_service_tier is not None:
+        requested_service_tier = getattr(payload, "service_tier", None)
+        # ``auto``/``default`` are accepted at the API-key surface but
+        # the ChatGPT/Codex backend rejects them as literal values. Map
+        # them onto the wire-level absence of ``service_tier`` (which
+        # already means "use upstream default") so the enforcement
+        # actually reaches upstream instead of failing with
+        # ``Unsupported service_tier``. See issue #546.
+        if api_key.enforced_service_tier in _UPSTREAM_OMIT_SERVICE_TIERS:
+            effective_service_tier: str | None = None
+        else:
+            effective_service_tier = api_key.enforced_service_tier
+        setattr(payload, "service_tier", effective_service_tier)
+        if requested_service_tier != api_key.enforced_service_tier:
+            logger.info(
+                "api_key_service_tier_enforced request_id=%s key_id=%s "
+                "requested_service_tier=%s enforced_service_tier=%s "
+                "outbound_service_tier=%s",
+                get_request_id(),
+                api_key.id,
+                requested_service_tier,
+                api_key.enforced_service_tier,
+                effective_service_tier,
+            )
+
+
+def resolve_model_alias(model: str | None) -> str | None:
+    alias = _resolve_model_alias_parts(model)
+    if alias is None:
+        return model
+    return alias[0]
+
+
+def normalize_upstream_model_alias(payload: ResponsesRequest | ResponsesCompactRequest) -> None:
+    requested_model = payload.model
+    alias = _resolve_model_alias_parts(requested_model)
+    if alias is None:
+        return
+
+    canonical_model, alias_effort, alias_service_tier = alias
+    if payload.model != canonical_model:
+        logger.info(
+            "model_alias_normalized request_id=%s requested_model=%s normalized_model=%s",
+            get_request_id(),
+            payload.model,
+            canonical_model,
+        )
+        payload.model = canonical_model
+
+    if alias_effort is not None:
+        requested_effort = payload.reasoning.effort if payload.reasoning else None
+        if payload.reasoning is None:
+            payload.reasoning = ResponsesReasoning(effort=alias_effort)
+        else:
+            payload.reasoning.effort = alias_effort
+        if requested_effort != alias_effort:
+            logger.info(
+                "model_alias_reasoning_normalized request_id=%s requested_model=%s "
+                "normalized_model=%s requested_effort=%s normalized_effort=%s",
+                get_request_id(),
+                requested_model,
+                canonical_model,
+                requested_effort,
+                alias_effort,
+            )
+
+    if alias_service_tier is not None and getattr(payload, "service_tier", None) is None:
+        setattr(payload, "service_tier", alias_service_tier)
+        logger.info(
+            "model_alias_service_tier_normalized request_id=%s requested_model=%s "
+            "normalized_model=%s normalized_service_tier=%s",
+            get_request_id(),
+            requested_model,
+            canonical_model,
+            alias_service_tier,
+        )
+
+
+def _resolve_model_alias_parts(model: str | None) -> tuple[str, str | None, str | None] | None:
+    if not isinstance(model, str):
+        return None
+    normalized = model.strip().lower()
+    if not normalized:
+        return None
+
+    for base_model in _GPT5_ALIAS_BASE_MODELS:
+        prefix = f"{base_model}-"
+        if not normalized.startswith(prefix):
+            continue
+        suffix = normalized[len(prefix) :]
+        tokens = [token for token in suffix.split("-") if token]
+        if not tokens or any(token not in _MODEL_ALIAS_TOKENS for token in tokens):
+            return None
+        return base_model, _resolve_alias_reasoning_effort(tokens), _resolve_alias_service_tier(tokens)
+
+    return None
+
+
+def _resolve_alias_reasoning_effort(tokens: list[str]) -> str | None:
+    selected: str | None = None
+    selected_rank = -1
+    for token in tokens:
+        effort = _MODEL_ALIAS_REASONING_TOKENS.get(token)
+        if effort is None:
+            continue
+        rank = _MODEL_ALIAS_REASONING_RANK[effort]
+        if rank > selected_rank:
+            selected = effort
+            selected_rank = rank
+    return selected
+
+
+def _resolve_alias_service_tier(tokens: list[str]) -> str | None:
+    for token in tokens:
+        service_tier = _MODEL_ALIAS_SERVICE_TIER_TOKENS.get(token)
+        if service_tier is not None:
+            return service_tier
+    return None
+
+
+def normalize_unsupported_reasoning_effort(
+    payload: ResponsesRequest | ResponsesCompactRequest,
+    *,
+    registry: ModelRegistry | None = None,
+) -> None:
+    """Rewrite ``reasoning.effort`` values the upstream backend rejects.
+
+    Some efforts that codex-lb accepts at the API surface (notably
+    ``"minimal"``) are silently dropped by the ChatGPT/Codex WebSocket
+    backend, which causes the response stream to hang with no completion.
+    For those values we map to a value the resolved model actually supports
+    so clients (e.g. Codex CLI's ``--reasoning-effort minimal``) keep
+    working. Mapping picks the model's lowest advertised effort, falling
+    back to ``low`` when the registry has no metadata yet.
+    """
+
+    if payload.reasoning is None or payload.reasoning.effort is None:
+        return
+
+    requested_effort = payload.reasoning.effort
+    normalized_effort = requested_effort.strip().lower()
+    if normalized_effort not in _UNSUPPORTED_UPSTREAM_REASONING_EFFORTS:
+        return
+
+    fallback = _resolve_reasoning_effort_fallback(
+        payload.model,
+        registry=registry or get_model_registry(),
+    )
+    payload.reasoning.effort = fallback
+    logger.info(
+        "reasoning_effort_normalized request_id=%s model=%s requested_effort=%s normalized_effort=%s",
+        get_request_id(),
+        payload.model,
+        requested_effort,
+        fallback,
+    )
+
+
+def _resolve_reasoning_effort_fallback(
+    model: str | None,
+    *,
+    registry: ModelRegistry,
+) -> str:
+    if not model:
+        return _DEFAULT_REASONING_EFFORT_FALLBACK
+    snapshot = registry.get_snapshot()
+    if snapshot is None:
+        return _DEFAULT_REASONING_EFFORT_FALLBACK
+    upstream = snapshot.models.get(model) or snapshot.models.get(model.strip().lower())
+    if upstream is None:
+        return _DEFAULT_REASONING_EFFORT_FALLBACK
+    advertised = [level.effort for level in upstream.supported_reasoning_levels if level.effort]
+    # Prefer the order the model registry advertises (already lowest -> highest
+    # for the GPT-5 family), but always pick the first advertised effort that
+    # is not itself an unsupported value.
+    for effort in advertised:
+        if effort.strip().lower() not in _UNSUPPORTED_UPSTREAM_REASONING_EFFORTS:
+            return effort
+    return _DEFAULT_REASONING_EFFORT_FALLBACK
+
+
+def openai_validation_error(exc: ValidationError) -> OpenAIErrorEnvelope:
+    error = openai_invalid_payload_error()
+    if exc.errors():
+        first = exc.errors()[0]
+        loc = first.get("loc", [])
+        if isinstance(loc, (list, tuple)):
+            param = ".".join(str(part) for part in loc if part != "body")
+            if param:
+                error["error"]["param"] = param
+    return error
+
+
+def openai_invalid_payload_error(param: str | None = None) -> OpenAIErrorEnvelope:
+    error = openai_error("invalid_request_error", "Invalid request payload", error_type="invalid_request_error")
+    if param:
+        error["error"]["param"] = param
+    return error
+
+
+def openai_client_payload_error(exc: ClientPayloadError) -> OpenAIErrorEnvelope:
+    """Render a ``ClientPayloadError`` as an OpenAI error envelope.
+
+    Falls back to ``openai_invalid_payload_error`` for legacy callsites
+    that raise ``ClientPayloadError`` without ``code`` / ``error_type``.
+    """
+    if exc.code is None and exc.error_type is None:
+        return openai_invalid_payload_error(exc.param)
+    code = exc.code or "invalid_request_error"
+    error_type = exc.error_type or "invalid_request_error"
+    error = openai_error(code, str(exc), error_type=error_type)
+    if exc.param:
+        error["error"]["param"] = exc.param
+    return error
+
+
+def normalize_responses_request_payload(
+    payload: dict[str, JsonValue],
+    *,
+    openai_compat: bool,
+) -> ResponsesRequest:
+    if openai_compat:
+        responses = V1ResponsesRequest.model_validate(payload).to_responses_request()
+    else:
+        responses = ResponsesRequest.model_validate(payload)
+    enforce_strict_text_format(responses)
+    enforce_strict_function_tools_format(responses.tools)
+    return responses
+
+
+def enforce_strict_text_format(request: ResponsesRequest) -> None:
+    """Reject strict-mode JSON schemas that violate OpenAI structured-outputs rules.
+
+    The Codex backend mirrors OpenAI's strict-mode policy and closes the
+    websocket with ``close_code=1000`` (delivering the original
+    ``invalid_json_schema`` payload via ``response.failed``). The local
+    pre-check raises a deterministic 400 before any upstream connection
+    is opened, keeping ``/v1/responses`` and the chat-conversion path
+    consistent and avoiding pointless retry/reconnect cycles for
+    permanently invalid schemas.
+    """
+    if request.text is None or request.text.format is None:
+        return
+    text_format = request.text.format
+    if text_format.type != "json_schema" or text_format.strict is not True:
+        return
+    if text_format.schema_ is None:
+        return
+    violation = validate_strict_json_schema(
+        text_format.schema_,
+        name=text_format.name,
+        param="text.format.schema",
+    )
+    if violation is None:
+        return
+    raise ClientPayloadError(
+        violation.message,
+        param=violation.param,
+        code=violation.code,
+        error_type="invalid_request_error",
+    )
+
+
+def enforce_strict_function_tools_format(
+    tools: list[JsonValue] | None,
+    *,
+    param_template: str = "tools[{index}].parameters",
+    nested: bool = False,
+) -> None:
+    """Reject strict-mode function tools whose parameter schemas violate OpenAI rules.
+
+    Mirrors :func:`enforce_strict_text_format` for function tools that
+    set ``strict: true``. The Codex backend rejects an invalid strict
+    tool schema by closing the WebSocket with ``close_code=1000``; the
+    surfaced error is a generic ``upstream_rejected_input`` 502, which
+    well-behaved retry loops misclassify as transient. Real OpenAI
+    returns a deterministic ``400 invalid_function_parameters`` for the
+    same payload, so codex-lb pre-validates here.
+
+    ``param_template`` controls how the rejected parameter is named in
+    the error envelope: native ``/v1/responses`` callers see
+    ``tools[<i>].parameters``; chat-completions callers pass
+    ``"tools[{index}].function.parameters"`` to mirror the inbound
+    shape.
+
+    ``nested`` selects the shape of an inbound function tool:
+
+    * ``False`` (default) — flat ``{"type": "function", "name": ...,
+      "parameters": ..., "strict": ...}``. This is the
+      ``/v1/responses`` request shape (and the shape produced by
+      ``_normalize_chat_tools``).
+    * ``True`` — chat-completions shape with the function payload
+      wrapped under ``"function"``:
+      ``{"type": "function", "function": {"name": ..., "parameters":
+      ..., "strict": ...}}``. The chat handler MUST pass ``True`` and
+      hand in the *original* request payload's ``tools`` list (not the
+      list returned by ``ChatCompletionsRequest.to_responses_request``,
+      which may drop or reorder entries) so the ``{index}`` slot in
+      ``param_template`` lines up with the inbound payload.
+
+      A tool is treated as a function tool whenever ``tool["function"]``
+      is a dict — the same rule ``_normalize_chat_tools`` uses, where
+      missing or other ``type`` values get coerced to ``"function"``
+      (``"type": tool_type or "function"``). Anchoring on the wrapper
+      key keeps pre-validation in lockstep with normalization; otherwise
+      a payload like ``{"function": {"strict": true, "parameters":
+      <invalid>}}`` (no top-level ``type``) bypasses the local 400 and
+      surfaces as a misleading upstream 5xx.
+    """
+    if not tools:
+        return
+    for index, tool in enumerate(tools):
+        if not isinstance(tool, dict):
+            continue
+        if nested:
+            # Chat path: detect function tools the same way
+            # ``_normalize_chat_tools`` does — presence of a ``"function"``
+            # dict is the signal, not a strict ``"type" == "function"``
+            # check. The normalizer coerces missing or other ``type``
+            # values to ``"function"`` whenever ``tool["function"]`` is a
+            # dict (`"type": tool_type or "function"`), so pre-validation
+            # must mirror that or strict violations on type-omitted
+            # nested tools bypass the local 400 and surface as upstream
+            # 5xx instead.
+            function_value = tool.get("function")
+            if not isinstance(function_value, dict):
+                continue
+            descriptor = function_value
+        else:
+            if tool.get("type") != "function":
+                continue
+            descriptor = tool
+        if descriptor.get("strict") is not True:
+            continue
+        parameters = descriptor.get("parameters")
+        if parameters is None:
+            continue
+        raw_name = descriptor.get("name")
+        name = raw_name if isinstance(raw_name, str) else None
+        violation = validate_strict_function_tool_schema(
+            parameters,
+            name=name,
+            param=param_template.format(index=index),
+        )
+        if violation is None:
+            continue
+        raise ClientPayloadError(
+            violation.message,
+            param=violation.param,
+            code=violation.code,
+            error_type="invalid_request_error",
+        )
