@@ -4,10 +4,10 @@ set -euo pipefail
 MODE="${1:?usage: scripts/helm-kind-smoke.sh <bundled|external-db>}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CHART_DIR="${ROOT_DIR}/deploy/helm/codex-lb"
-KUBE_CONTEXT="${KUBE_CONTEXT:-kind-codex-lb-smoke}"
+CHART_DIR="${ROOT_DIR}/deploy/helm/firecrawl-lb"
+KUBE_CONTEXT="${KUBE_CONTEXT:-kind-firecrawl-lb-smoke}"
 IMAGE_REGISTRY="${IMAGE_REGISTRY:-ghcr.io}"
-IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-soju06/codex-lb}"
+IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-soju06/firecrawl-lb}"
 IMAGE_TAG="${IMAGE_TAG:-ci}"
 DB_PASSWORD="${DB_PASSWORD:-smoke-password}"
 
@@ -39,8 +39,8 @@ dump_namespace_debug() {
 }
 
 install_bundled() {
-  local namespace="codex-lb-smoke-bundled"
-  local release="codex-lb-bundled"
+  local namespace="firecrawl-lb-smoke-bundled"
+  local release="firecrawl-lb-bundled"
 
   trap 'dump_namespace_debug "${namespace}"' ERR
 
@@ -58,7 +58,7 @@ install_bundled() {
     --set ingress.enabled=true \
     --set ingress.ingressClassName=nginx \
     --set ingress.nginx.enabled=true \
-    --set-string 'ingress.hosts[0].host=codex-lb.localtest.me' \
+    --set-string 'ingress.hosts[0].host=firecrawl-lb.localtest.me' \
     --set-string 'ingress.hosts[0].paths[0].path=/' \
     --set-string 'ingress.hosts[0].paths[0].pathType=Prefix' \
     --wait \
@@ -69,10 +69,10 @@ install_bundled() {
 }
 
 install_external_db() {
-  local namespace="codex-lb-smoke-external"
-  local release="codex-lb-external"
-  local db_release="codex-lb-smoke-db"
-  local app_secret="codex-lb-external-secrets"
+  local namespace="firecrawl-lb-smoke-external"
+  local release="firecrawl-lb-external"
+  local db_release="firecrawl-lb-smoke-db"
+  local app_secret="firecrawl-lb-external-secrets"
   local encryption_key
 
   trap 'dump_namespace_debug "${namespace}"' ERR
@@ -89,16 +89,16 @@ PY
     --kube-context "${KUBE_CONTEXT}" \
     --namespace "${namespace}" \
     --create-namespace \
-    --set auth.username=codexlb \
+    --set auth.username=firecrawllb \
     --set auth.password="${DB_PASSWORD}" \
-    --set auth.database=codexlb \
+    --set auth.database=firecrawllb \
     --set primary.persistence.enabled=false \
     --wait \
     --timeout 10m
 
   kubectl --context "${KUBE_CONTEXT}" -n "${namespace}" delete secret "${app_secret}" --ignore-not-found
   kubectl --context "${KUBE_CONTEXT}" -n "${namespace}" create secret generic "${app_secret}" \
-    --from-literal=database-url="postgresql+asyncpg://codexlb:${DB_PASSWORD}@${db_release}-postgresql:5432/codexlb" \
+    --from-literal=database-url="postgresql+asyncpg://firecrawllb:${DB_PASSWORD}@${db_release}-postgresql:5432/firecrawllb" \
     --from-literal=encryption-key="${encryption_key}"
 
   helm upgrade --install "${release}" "${CHART_DIR}" \

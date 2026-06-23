@@ -161,7 +161,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--repo",
-        default=os.environ.get("GITHUB_REPOSITORY", "Soju06/codex-lb"),
+        default=os.environ.get("GITHUB_REPOSITORY", "Soju06/firecrawl-lb"),
         help="GitHub repository to check, in owner/name form",
     )
     parser.add_argument(

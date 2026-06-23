@@ -9,9 +9,9 @@ body:
         Thanks for proposing an idea! Before you continue:
 
         - For open-ended ideas, please consider opening a
-          [Discussion](https://github.com/Soju06/codex-lb/discussions) first to
+          [Discussion](https://github.com/Soju06/firecrawl-lb/discussions) first to
           collect feedback. Use this form when you have a concrete, scoped proposal.
-        - codex-lb uses **OpenSpec-first** development. Significant behavior
+        - firecrawl-lb uses **OpenSpec-first** development. Significant behavior
           changes will eventually live as an `openspec/changes/<change>/`
           proposal — you don't need to write the spec yourself, but think about
           *what changes* in observable behavior, not just *how* to implement it.
@@ -32,9 +32,8 @@ body:
       label: Problem / motivation
       description: What user-facing pain point or limitation does this address?
       placeholder: |
-        e.g. "When a ChatGPT account hits its 5h quota, codex-lb continues to
-        route to it for ~30s before marking it cooled, causing intermittent 429s
-        on user-visible requests."
+        e.g. "When a Firecrawl account returns 429, firecrawl-lb should cool it
+        down immediately and route the next scrape request to another account."
     validations:
       required: true
 
@@ -63,10 +62,9 @@ body:
         - Proxy / upstream routing
         - Account management & quota tracking
         - Dashboard UI
-        - Authentication / OAuth
-        - Chat Completions API surface
-        - Responses API surface
-        - Images / files API
+        - Authentication / dashboard access
+        - Firecrawl V2 API surface
+        - Jobs / request logs
         - Helm / Docker / packaging
         - OpenSpec / docs
         - Other

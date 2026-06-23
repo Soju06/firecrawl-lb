@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """Live verification of /v1/responses OpenAI SDK compatibility.
 
-Drives the official `openai` Python SDK against a running codex-lb instance
+Drives the official `openai` Python SDK against a running firecrawl-lb instance
 and asserts the public /v1 surface is parseable across all request shapes:
 plain text, tool call, structured output, error stream, non-streaming.
 
 Usage:
-    # 1. Boot codex-lb locally (with the fix branch checked out)
-    cd ~/projects/codex-lb
+    # 1. Boot firecrawl-lb locally (with the fix branch checked out)
+    cd ~/projects/firecrawl-lb
     .venv/bin/python -m app.main &
     sleep 3
 
     # 2. Run this script
     .venv/bin/python scripts/verify_v1_responses_openai_sdk.py \\
-        --base-url http://127.0.0.1:2455/v1 \\
-        --api-key <codex-lb dashboard key> \\
+        --base-url http://127.0.0.1:2465/v1 \\
+        --api-key <firecrawl-lb dashboard key> \\
         --model gpt-5.5
 
 Or against the public deployment after the fix is deployed:
@@ -227,8 +227,8 @@ async def case_non_streaming(client: openai.AsyncOpenAI, model: str) -> CaseResu
 
 async def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", required=True, help="codex-lb /v1 base URL (e.g. http://127.0.0.1:2455/v1)")
-    parser.add_argument("--api-key", required=True, help="codex-lb API key (sk-clb-...)")
+    parser.add_argument("--base-url", required=True, help="firecrawl-lb /v1 base URL (e.g. http://127.0.0.1:2465/v1)")
+    parser.add_argument("--api-key", required=True, help="firecrawl-lb API key (sk-clb-...)")
     parser.add_argument("--model", default="gpt-5.5")
     parser.add_argument("--skip", default="", help="comma-separated case names to skip")
     args = parser.parse_args()

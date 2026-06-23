@@ -3,10 +3,10 @@
 
 This script intentionally keeps credentials out of the repository. Provide the
 base URL and API key via environment variables when running it against a local
-or staging codex-lb deployment:
+or staging firecrawl-lb deployment:
 
-  CODEX_LB_BASE_URL=https://example.test \
-  CODEX_LB_API_KEY=... \
+  FIRECRAWL_LB_BASE_URL=https://example.test \
+  FIRECRAWL_LB_API_KEY=... \
   uv run python scripts/reproduce_responses_stream_load.py --agents 6 --duration-seconds 3600
 """
 
@@ -108,8 +108,8 @@ async def _main() -> None:
     parser.add_argument("--model", default=DEFAULT_MODEL)
     args = parser.parse_args()
 
-    base_url = os.environ["CODEX_LB_BASE_URL"]
-    api_key = os.environ["CODEX_LB_API_KEY"]
+    base_url = os.environ["FIRECRAWL_LB_BASE_URL"]
+    api_key = os.environ["FIRECRAWL_LB_API_KEY"]
     deadline = time.monotonic() + args.duration_seconds
     results = await asyncio.gather(
         *(

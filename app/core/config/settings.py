@@ -175,9 +175,9 @@ class Settings(BaseSettings):
     oauth_originator: str = "codex_chatgpt_desktop"
     oauth_scope: str = "openid profile email"
     oauth_timeout_seconds: float = 30.0
-    oauth_redirect_uri: str = "http://localhost:1455/auth/callback"
+    oauth_redirect_uri: str = "http://localhost:2465/auth/callback"
     oauth_callback_host: str = _default_oauth_callback_host()
-    oauth_callback_port: int = 1455  # Do not change the port. OpenAI dislikes changes.
+    oauth_callback_port: int = 2465
     token_refresh_timeout_seconds: float = 8.0
     transcription_request_budget_seconds: float = Field(default=120.0, gt=0)
     token_refresh_interval_days: int = 8
@@ -228,7 +228,7 @@ class Settings(BaseSettings):
     images_max_partial_images: int = Field(default=3, ge=0, le=3)
     # NOTE: there is intentionally no ``images_max_n`` setting. The
     # upstream ``image_generation`` tool path accepts only a single
-    # image per call and codex-lb does not yet implement client-side
+    # image per call and firecrawl-lb does not yet implement client-side
     # fan-out, so ``n > 1`` is hard-rejected at the API boundary. The
     # cap is lifted in the same change that introduces fan-out.
     model_registry_enabled: bool = True

@@ -7,7 +7,7 @@ import anyio
 
 # Default TTL when the firewall cache is constructed before settings are
 # resolved. The application normally tunes this via
-# ``firewall_ip_cache_ttl_seconds`` (env ``CODEX_LB_FIREWALL_IP_CACHE_TTL_SECONDS``),
+# ``firewall_ip_cache_ttl_seconds`` (env ``FIRECRAWL_LB_FIREWALL_IP_CACHE_TTL_SECONDS``),
 # read lazily on first access in :func:`get_firewall_ip_cache`. The default is
 # intentionally well above the worst-case request-handling latency so the cache
 # provides real relief on hot paths under load.

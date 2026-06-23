@@ -321,18 +321,18 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: codex_lb
-          POSTGRES_PASSWORD: codex_lb
-          POSTGRES_DB: codex_lb
+          POSTGRES_USER: firecrawl_lb
+          POSTGRES_PASSWORD: firecrawl_lb
+          POSTGRES_DB: firecrawl_lb
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U codex_lb -d codex_lb"
+          --health-cmd "pg_isready -U firecrawl_lb -d firecrawl_lb"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     env:
-      CODEX_LB_TEST_DATABASE_URL: postgresql+asyncpg://codex_lb:codex_lb@127.0.0.1:5432/codex_lb
+      FIRECRAWL_LB_TEST_DATABASE_URL: postgresql+asyncpg://firecrawl_lb:firecrawl_lb@127.0.0.1:5432/firecrawl_lb
       PYTHONFAULTHANDLER: "1"
 
     steps:
@@ -395,13 +395,13 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: codex_lb
-          POSTGRES_PASSWORD: codex_lb
-          POSTGRES_DB: codex_lb
+          POSTGRES_USER: firecrawl_lb
+          POSTGRES_PASSWORD: firecrawl_lb
+          POSTGRES_DB: firecrawl_lb
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U codex_lb -d codex_lb"
+          --health-cmd "pg_isready -U firecrawl_lb -d firecrawl_lb"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -467,7 +467,7 @@ jobs:
       contents: read
       security-events: write
     env:
-      DOCKER_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('codex-lb-pr-{0}', github.event.pull_request.number) || 'codex-lb-main' }}
+      DOCKER_CACHE_SCOPE: ${{ github.event_name == 'pull_request' && format('firecrawl-lb-pr-{0}', github.event.pull_request.number) || 'firecrawl-lb-main' }}
 
     steps:
       - name: Checkout repository
@@ -485,14 +485,14 @@ jobs:
           file: Dockerfile
           push: false
           load: true
-          tags: codex-lb:ci
+          tags: firecrawl-lb:ci
           cache-from: type=gha,scope=${{ env.DOCKER_CACHE_SCOPE }}
           cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
 
       - name: Scan Docker image with Trivy (SARIF)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
-          image-ref: codex-lb:ci
+          image-ref: firecrawl-lb:ci
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH,MEDIUM,LOW
@@ -510,7 +510,7 @@ jobs:
       - name: Enforce Trivy high-severity gate
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
-          image-ref: codex-lb:ci
+          image-ref: firecrawl-lb:ci
           format: table
           exit-code: 1
           severity: CRITICAL,HIGH

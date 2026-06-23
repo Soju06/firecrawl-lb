@@ -6,7 +6,7 @@ import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vitest/config";
 
-const proxyTarget = process.env.API_PROXY_TARGET || "http://localhost:2455";
+const proxyTarget = process.env.API_PROXY_TARGET || "http://localhost:2465";
 const packageJson = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version?: string };
 const appVersion = packageJson.version ?? "0.0.0";
 const manualChunkPackages: Record<string, string[]> = {
@@ -44,8 +44,6 @@ export default defineConfig({
     proxy: {
       "/api": proxyTarget,
       "/v2": proxyTarget,
-      "/v1": proxyTarget,
-      "/backend-api": proxyTarget,
       "/health": proxyTarget,
     },
   },

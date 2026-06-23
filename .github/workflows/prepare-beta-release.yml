@@ -108,7 +108,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "${BRANCH}"
-          git add pyproject.toml app/__init__.py frontend/package.json deploy/helm/codex-lb/Chart.yaml uv.lock
+          git add pyproject.toml app/__init__.py frontend/package.json deploy/helm/firecrawl-lb/Chart.yaml uv.lock
           git commit -m "chore: release ${TAG}"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push --force-with-lease origin "${BRANCH}"
@@ -149,9 +149,9 @@ jobs:
 
           ## Install after publish
           \`\`\`bash
-          uvx --from "codex-lb==${PYPI_VERSION}" codex-lb
+          uvx --from "firecrawl-lb==${PYPI_VERSION}" firecrawl-lb
           docker pull ghcr.io/${GITHUB_REPOSITORY}:${VERSION}
-          helm install codex-lb oci://ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/charts/codex-lb --version ${VERSION} --devel
+          helm install firecrawl-lb oci://ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/charts/firecrawl-lb --version ${VERSION} --devel
           \`\`\`
 
           ## Promotion

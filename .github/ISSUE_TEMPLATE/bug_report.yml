@@ -1,5 +1,5 @@
 name: 🐛 Bug Report
-description: Report a reproducible bug, crash, or unexpected behavior in codex-lb.
+description: Report a reproducible bug, crash, or unexpected behavior in firecrawl-lb.
 title: "bug: <one-line summary of what's broken>"
 labels: ["bug", "triage"]
 body:
@@ -9,9 +9,9 @@ body:
         Thanks for taking the time to file a bug report! 🙏
 
         Before you continue:
-        - Search [open & closed issues](https://github.com/Soju06/codex-lb/issues?q=is%3Aissue) — your problem may already be known.
-        - For "how do I…?" questions, please use [Discussions](https://github.com/Soju06/codex-lb/discussions) instead.
-        - For security vulnerabilities, use a [private advisory](https://github.com/Soju06/codex-lb/security/advisories/new) — **do not** post them here.
+        - Search [open & closed issues](https://github.com/Soju06/firecrawl-lb/issues?q=is%3Aissue) — your problem may already be known.
+        - For "how do I…?" questions, please use [Discussions](https://github.com/Soju06/firecrawl-lb/discussions) instead.
+        - For security vulnerabilities, use a [private advisory](https://github.com/Soju06/firecrawl-lb/security/advisories/new) — **do not** post them here.
 
   - type: checkboxes
     id: preflight
@@ -21,7 +21,7 @@ body:
       options:
         - label: I searched existing issues and confirmed this is not a duplicate.
           required: true
-        - label: I am running a supported codex-lb version (see Releases).
+        - label: I am running a supported firecrawl-lb version (see Releases).
           required: true
         - label: I can reproduce the problem with the steps below.
           required: true
@@ -29,8 +29,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: codex-lb version
-      description: Output of `codex-lb --version` or the image tag you deployed.
+      label: firecrawl-lb version
+      description: Output of `firecrawl-lb --version` or the image tag you deployed.
       placeholder: "1.17.0"
     validations:
       required: true
@@ -41,11 +41,11 @@ body:
       label: Deployment method
       multiple: false
       options:
-        - uvx (codex-lb)
-        - pip install codex-lb
-        - Docker (ghcr.io/Soju06/codex-lb)
+        - uvx (firecrawl-lb)
+        - pip install firecrawl-lb
+        - Docker (ghcr.io/Soju06/firecrawl-lb)
         - Docker Compose
-        - Helm chart (oci://ghcr.io/soju06/charts/codex-lb)
+        - Helm chart (oci://ghcr.io/soju06/charts/firecrawl-lb)
         - From source
         - Other (describe below)
     validations:
@@ -54,14 +54,15 @@ body:
   - type: dropdown
     id: client
     attributes:
-      label: Client used against codex-lb
+      label: Client used against firecrawl-lb
       multiple: true
       description: Select every client that triggers the bug.
       options:
-        - Codex CLI
-        - Codex app (desktop / web)
-        - ОpenCode
-        - Direct HTTP (curl / SDK)
+        - Firecrawl SDK
+        - Direct HTTP (curl)
+        - Dashboard
+        - Reverse proxy / ingress
+        - Scheduled refresh
         - Other (describe below)
     validations:
       required: true
@@ -69,18 +70,13 @@ body:
   - type: dropdown
     id: account_plan
     attributes:
-      label: ChatGPT account plan(s) involved
+      label: Firecrawl account type(s) involved
       multiple: true
-      description: Plan type of the upstream account(s) in the affected pool.
+      description: Account or billing type of the upstream account(s) in the affected pool.
       options:
-        - Free
-        - Plus
-        - Pro
         - Team
-        - Business
         - Enterprise
-        - Edu
-        - API-key only (no ChatGPT account)
+        - API key
         - Mixed pool
         - Not sure
     validations:
@@ -89,9 +85,9 @@ body:
   - type: input
     id: model
     attributes:
-      label: Model(s) involved
-      description: Exact model string(s) from the request that fails.
-      placeholder: "gpt-5-codex, gpt-5.3-codex-spark"
+      label: Endpoint(s) involved
+      description: Exact Firecrawl endpoint(s) from the request that fails.
+      placeholder: "/v2/scrape, /v2/crawl/{job_id}"
 
   - type: textarea
     id: what_happened
@@ -99,8 +95,8 @@ body:
       label: What happened?
       description: Describe the actual behavior. Include error messages verbatim.
       placeholder: |
-        e.g. "Streaming response from /v1/responses returns empty body for ~10s
-        then closes with status 200 but no `response.output_text.delta` events."
+        e.g. "POST /v2/scrape returns 502 when one account is rate-limited
+        even though another active credential has remaining credits."
     validations:
       required: true
 
@@ -117,10 +113,10 @@ body:
       label: Steps to reproduce
       description: Minimal reproduction — config, request payload, command sequence.
       placeholder: |
-        1. Start codex-lb with `docker compose up -d` (compose snippet below).
-        2. Configure Codex CLI to point at http://localhost:<port>.
-        3. Run `codex … <prompt>`.
-        4. Observe …
+        1. Start firecrawl-lb with `docker compose up -d` (compose snippet below).
+        2. Add two Firecrawl credentials in the dashboard.
+        3. Run `curl http://localhost:2465/v2/scrape ...`.
+        4. Observe the response.
       render: markdown
     validations:
       required: true
@@ -130,7 +126,7 @@ body:
     attributes:
       label: Relevant logs
       description: |
-        Paste the **codex-lb server logs** spanning the failing request. Redact API
+        Paste the **firecrawl-lb server logs** spanning the failing request. Redact API
         keys, tokens, and any account identifiers before pasting.
       render: shell
 

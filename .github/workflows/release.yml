@@ -124,7 +124,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/project/codex-lb/
+      url: https://pypi.org/project/firecrawl-lb/
 
     steps:
       - name: Download dist artifacts
@@ -193,8 +193,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=codex-lb-release
-          cache-to: type=gha,mode=max,scope=codex-lb-release
+          cache-from: type=gha,scope=firecrawl-lb-release
+          cache-to: type=gha,mode=max,scope=firecrawl-lb-release
 
       - name: Set lowercase image ref
         id: image
@@ -240,7 +240,7 @@ jobs:
         uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2
 
       - name: Build Helm dependencies
-        run: helm dependency build deploy/helm/codex-lb/
+        run: helm dependency build deploy/helm/firecrawl-lb/
 
       - name: Log in to GHCR (Helm)
         env:
@@ -254,12 +254,12 @@ jobs:
       - name: Package Helm chart
         run: |
           mkdir -p .helm-pkg
-          helm package deploy/helm/codex-lb/ -d .helm-pkg/
+          helm package deploy/helm/firecrawl-lb/ -d .helm-pkg/
 
       - name: Push Helm chart to GHCR
         run: |
           OWNER_LC="${GITHUB_REPOSITORY_OWNER,,}"
-          helm push .helm-pkg/codex-lb-*.tgz "oci://ghcr.io/${OWNER_LC}/charts"
+          helm push .helm-pkg/firecrawl-lb-*.tgz "oci://ghcr.io/${OWNER_LC}/charts"
 
   create-github-release:
     name: Create GitHub Release
@@ -364,13 +364,13 @@ jobs:
             echo "## Install / Run"
             echo '```bash'
             if [ "${IS_PRERELEASE}" = "true" ]; then
-              echo "uvx --from \"codex-lb==${PYPI_VERSION}\" codex-lb"
+              echo "uvx --from \"firecrawl-lb==${PYPI_VERSION}\" firecrawl-lb"
               echo "docker pull ghcr.io/${GITHUB_REPOSITORY}:${TAG_VERSION}"
-              echo "helm install codex-lb oci://ghcr.io/soju06/charts/codex-lb --version ${TAG_VERSION} --devel"
+              echo "helm install firecrawl-lb oci://ghcr.io/soju06/charts/firecrawl-lb --version ${TAG_VERSION} --devel"
             else
-              echo 'uvx codex-lb'
+              echo 'uvx firecrawl-lb'
               echo "docker pull ghcr.io/${GITHUB_REPOSITORY}:${TAG_VERSION}"
-              echo "helm install codex-lb oci://ghcr.io/soju06/charts/codex-lb --version ${TAG_VERSION}"
+              echo "helm install firecrawl-lb oci://ghcr.io/soju06/charts/firecrawl-lb --version ${TAG_VERSION}"
             fi
             echo '```'
           } >> release_notes.md

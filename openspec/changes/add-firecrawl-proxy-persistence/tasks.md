@@ -65,3 +65,12 @@
 - [x] Delete old frontend Codex dashboard/accounts/API/firewall/sticky/quota/conversation feature areas and integration tests.
 - [x] Trim frontend mocks, auth branding, shared status/runtime/settings references, and old hook/component imports.
 - [x] Run backend and frontend verification for the cleanup slice.
+
+## 9. Deployment system parity
+
+- [x] Rename Docker, Compose, Helm, release, and GitHub automation artifacts to firecrawl-lb identity.
+- [x] Move the Helm chart to `deploy/helm/firecrawl-lb` and update chart helpers, labels, dashboard metadata, and release-managed paths.
+- [x] Replace deployment env vars with `FIRECRAWL_LB_*`, port `2465`, and `/var/lib/firecrawl-lb` runtime paths.
+- [x] Remove Codex/OpenAI/OAuth/session-bridge deployment values and examples from active deployment artifacts.
+- [x] Preserve generic database, migration, metrics, tracing, ingress, service, HPA, PDB, NetworkPolicy, and release workflows.
+- [x] Record deployment verification at `/tmp/firecrawl-deploy-system-verification.md`.

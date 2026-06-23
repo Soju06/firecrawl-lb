@@ -1,5 +1,5 @@
 <!--
-Thanks for contributing to codex-lb! 🙏
+Thanks for contributing to firecrawl-lb! 🙏
 Fill in the sections below. Delete sections that don't apply.
 -->
 
@@ -24,21 +24,19 @@ Linked issue: <!-- e.g. Closes #123, Fixes #456 -->
 ## OpenSpec
 
 <!--
-codex-lb is OpenSpec-first. If this PR changes observable behavior, requirements,
+firecrawl-lb is OpenSpec-first. If this PR changes observable behavior, requirements,
 contracts, or schema, it needs an OpenSpec change under openspec/changes/<change>/.
 
-If this PR touches an upstream-mimicking code path (Codex CLI / ChatGPT request
-shape, image pipeline, response.create framing, etc.), it must stay
-**codex-faithful** — i.e. preserve the exact wire format the real upstream
-emits. Call out anything that intentionally diverges, and link the spec section
-that records the divergence.
+If this PR touches a Firecrawl upstream-mimicking code path, it must preserve
+the Firecrawl response shape unless the linked spec explicitly records the
+intentional divergence.
 -->
 
 - [ ] This PR includes / updates an OpenSpec change
 - [ ] Not applicable — bug fix that matches the existing spec
 - [ ] Not applicable — docs / CI / chore only
-- [ ] This PR touches a codex-faithful path (image pipeline, request/response
-      shape, SSE framing, OAuth flow) and preserves upstream-equivalent behavior
+- [ ] This PR touches a Firecrawl upstream-compatible path and preserves
+      upstream-equivalent behavior
 
 Change directory: <!-- openspec/changes/<change>/ -->
 

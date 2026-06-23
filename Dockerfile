@@ -50,8 +50,8 @@ RUN python -m pip uninstall -y pip setuptools wheel || true \
         /usr/local/lib/python*/site-packages/wheel*
 
 RUN adduser --disabled-password --gecos "" app \
-    && mkdir -p /var/lib/codex-lb \
-    && chown -R app:app /var/lib/codex-lb
+    && mkdir -p /var/lib/firecrawl-lb \
+    && chown -R app:app /var/lib/firecrawl-lb
 
 COPY --from=python-build /opt/venv /opt/venv
 COPY app app
@@ -62,10 +62,10 @@ COPY --from=frontend-build /app/app/static app/static
 # The runtime image copies source files instead of installing the project, so
 # recreate the console-script entry point that pyproject would normally install.
 RUN chmod +x /app/scripts/docker-entrypoint.sh \
-    && printf '%s\n' '#!/bin/sh' 'exec python -m app.cli "$@"' > /usr/local/bin/codex-lb \
-    && chmod +x /usr/local/bin/codex-lb
+    && printf '%s\n' '#!/bin/sh' 'exec python -m app.cli "$@"' > /usr/local/bin/firecrawl-lb \
+    && chmod +x /usr/local/bin/firecrawl-lb
 
 USER app
-EXPOSE 2455 1455
+EXPOSE 2465
 
 CMD ["/app/scripts/docker-entrypoint.sh"]

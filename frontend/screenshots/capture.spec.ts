@@ -18,7 +18,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SCREENSHOT_DIR = path.resolve(__dirname, "../../docs/screenshots");
-const THEME_KEY = "codex-lb-theme";
+const THEME_KEY = "firecrawl-lb-theme";
 const SETTLE_MS = 1500;
 
 // CSS injected before page load to skip all animations/transitions instantly.

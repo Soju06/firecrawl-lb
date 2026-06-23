@@ -1,0 +1,39 @@
+firecrawl-lb has been installed successfully.
+
+  Release: {{ .Release.Name }}
+  Namespace: {{ .Release.Namespace }}
+  Install mode: {{ include "firecrawl-lb.installMode" . }}
+
+{{- if .Values.ingress.enabled }}
+  Access URL:
+  {{- range .Values.ingress.hosts }}
+    http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+  {{- end }}
+{{- else if .Values.gatewayApi.enabled }}
+  Access via Gateway API HTTPRoute.
+{{- else }}
+  To access firecrawl-lb, run:
+    kubectl port-forward svc/{{ include "firecrawl-lb.fullname" . }} 2465:2465 -n {{ .Release.Namespace }}
+  Then open: http://localhost:2465
+{{- end }}
+
+{{- if .Values.postgresql.enabled }}
+  Database: Bitnami PostgreSQL sub-chart ({{ .Release.Name }}-postgresql)
+{{- else }}
+  Database: External (configure via externalDatabase.url or auth.existingSecret)
+{{- end }}
+
+{{- if and .Values.migration.enabled (not .Values.config.databaseMigrateOnStartup) .Values.migration.schemaGate.enabled }}
+  App startup gate: enabled (pods wait for Alembic head before starting the main container)
+{{- end }}
+
+{{- if .Values.metrics.enabled }}
+  Metrics: http://{{ include "firecrawl-lb.fullname" . }}-metrics:{{ .Values.metrics.port }}/metrics
+{{- end }}
+
+IMPORTANT:
+  1. Set your encryption key in the Secret (key: encryption-key)
+     Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  2. Add your Firecrawl accounts at {{ if .Values.ingress.enabled }}the ingress URL{{ else }}http://localhost:2465{{ end }}/dashboard
+
+Run tests: helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

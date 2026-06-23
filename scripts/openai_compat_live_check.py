@@ -22,7 +22,7 @@ from openai.types.chat import (
 
 logger = logging.getLogger(__name__)
 
-BASE_URL = os.environ.get("CODEX_BASE_URL", "http://localhost:2455/v1")
+BASE_URL = os.environ.get("CODEX_BASE_URL", "http://localhost:2465/v1")
 API_KEY = os.environ.get("CODEX_API_KEY", "sk-local")
 MODEL_OVERRIDE = os.environ.get("CODEX_MODEL")
 

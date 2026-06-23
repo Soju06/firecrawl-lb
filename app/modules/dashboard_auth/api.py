@@ -221,7 +221,7 @@ async def setup_password(
         validation_status = await get_bootstrap_validation_status(submitted_bootstrap_token)
         if validation_status == "unavailable":
             raise DashboardAuthError(
-                "Remote bootstrap is disabled until CODEX_LB_DASHBOARD_BOOTSTRAP_TOKEN is configured.",
+                "Remote bootstrap is disabled until FIRECRAWL_LB_DASHBOARD_BOOTSTRAP_TOKEN is configured.",
                 code="bootstrap_unavailable",
             )
         if validation_status == "password_already_configured":

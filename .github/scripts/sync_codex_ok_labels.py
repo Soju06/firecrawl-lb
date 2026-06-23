@@ -30,7 +30,7 @@ SUCCESS_CHECK_STATES = {"SUCCESS", "NEUTRAL", "SKIPPED"}
 FAIL_CHECK_STATES = {"ACTION_REQUIRED", "CANCELLED", "ERROR", "FAILURE", "STALE", "TIMED_OUT"}
 PENDING_CHECK_STATES = {"EXPECTED", "IN_PROGRESS", "PENDING", "QUEUED", "REQUESTED", "WAITING"}
 UNMERGEABLE_STATES = {"DIRTY", "BLOCKED"}
-CODEX_LB_REQUIRED_CHECKS = frozenset(
+FIRECRAWL_LB_REQUIRED_CHECKS = frozenset(
     {
         "Frontend lint (eslint)",
         "Frontend type check (tsc)",
@@ -53,7 +53,7 @@ CODEX_LB_REQUIRED_CHECKS = frozenset(
     }
 )
 REQUIRED_CHECKS_BY_REPO = {
-    "Soju06/codex-lb": CODEX_LB_REQUIRED_CHECKS,
+    "Soju06/firecrawl-lb": FIRECRAWL_LB_REQUIRED_CHECKS,
 }
 PR_TIMELINE_QUERY = """
 query($owner: String!, $name: String!, $number: Int!, $before: String) {

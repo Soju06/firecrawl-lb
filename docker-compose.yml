@@ -7,7 +7,6 @@ services:
       - .env.local
     ports:
       - "2465:2465"
-      - "1455:1455"
     command:
       - fastapi
       - run

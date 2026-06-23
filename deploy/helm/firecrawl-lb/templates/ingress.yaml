@@ -1,0 +1,62 @@
+{{- if .Values.ingress.enabled }}
+{{- $baseAnnotations := dict }}
+{{- if .Values.ingress.certManager.enabled }}
+{{- $_ := set $baseAnnotations "cert-manager.io/cluster-issuer" .Values.ingress.certManager.clusterIssuer }}
+{{- end }}
+{{- if .Values.ingress.nginx.enabled }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-http-version" "1.1" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-buffering" "off" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-request-buffering" "off" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-body-size" "50m" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-read-timeout" "3600" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-send-timeout" "3600" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-next-upstream" "error" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-next-upstream-tries" "1" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/limit-rps" "100" }}
+{{- end }}
+{{- range $key, $value := .Values.ingress.annotations }}
+{{- $_ := set $baseAnnotations $key $value }}
+{{- end }}
+{{- $apiAnnotations := deepCopy $baseAnnotations }}
+{{- if .Values.ingress.nginx.upstreamHashBy }}
+{{- $_ := set $apiAnnotations "nginx.ingress.kubernetes.io/upstream-hash-by" .Values.ingress.nginx.upstreamHashBy }}
+{{- end }}
+{{- if .Values.ingress.nginx.upstreamHashBySubset }}
+{{- $_ := set $apiAnnotations "nginx.ingress.kubernetes.io/upstream-hash-by-subset" "true" }}
+{{- $_ := set $apiAnnotations "nginx.ingress.kubernetes.io/upstream-hash-by-subset-size" (.Values.ingress.nginx.upstreamHashBySubsetSize | toString) }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "firecrawl-lb.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "firecrawl-lb.labels" . | nindent 4 }}
+  {{- if $apiAnnotations }}
+  annotations:
+    {{- toYaml $apiAnnotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.ingress.ingressClassName | quote }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "firecrawl-lb.fullname" $ }}
+                port:
+                  name: http
+          {{- end }}
+    {{- end }}
+{{- end }}

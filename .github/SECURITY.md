@@ -6,9 +6,9 @@
 discussions, or pull requests.**
 
 Instead, report them privately using GitHub's
-[Private Vulnerability Reporting](https://github.com/Soju06/codex-lb/security/advisories/new):
+[Private Vulnerability Reporting](https://github.com/Soju06/firecrawl-lb/security/advisories/new):
 
-1. Open <https://github.com/Soju06/codex-lb/security/advisories/new>
+1. Open <https://github.com/Soju06/firecrawl-lb/security/advisories/new>
 2. Fill in a clear title and a detailed description of the issue.
 3. Include reproduction steps, affected versions, and any proof-of-concept you
    have.
@@ -17,13 +17,13 @@ Instead, report them privately using GitHub's
 If for some reason you cannot use the private advisory flow, you may instead
 contact the maintainer via the email address listed in
 [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md), with a subject line starting with
-`[codex-lb security]`.
+`[firecrawl-lb security]`.
 
 ## What to include
 
 A good report makes triage much faster:
 
-- **Affected version(s)**: e.g. `codex-lb 1.16.0`, ghcr image digest, or commit SHA.
+- **Affected version(s)**: e.g. `firecrawl-lb 1.16.0`, ghcr image digest, or commit SHA.
 - **Deployment**: uvx / pip / Docker / Helm / from source.
 - **Impact**: what can an attacker do? (data disclosure, account takeover,
   RCE, DoS, auth bypass, log injection, etc.)
@@ -35,17 +35,17 @@ A good report makes triage much faster:
 
 In scope:
 
-- The codex-lb proxy (`app/`) — auth, routing, account management, the
-  dashboard backend, the `/v1/*` and `/backend-api/*` surfaces.
+- The firecrawl-lb proxy (`app/`) — auth, routing, account management, the
+  dashboard backend, and the `/v2/*` Firecrawl surfaces.
 - The dashboard frontend (`frontend/`).
-- The published Docker image (`ghcr.io/Soju06/codex-lb`) and Helm chart
-  (`oci://ghcr.io/soju06/charts/codex-lb`).
-- Released PyPI artifacts (`codex-lb` on PyPI).
+- The published Docker image (`ghcr.io/Soju06/firecrawl-lb`) and Helm chart
+  (`oci://ghcr.io/soju06/charts/firecrawl-lb`).
+- Released PyPI artifacts (`firecrawl-lb` on PyPI).
 
 Out of scope (please don't file these as security advisories):
 
-- Issues in upstream services (ChatGPT, OpenAI Codex, model providers).
-- Vulnerabilities in third-party dependencies that don't reach codex-lb's
+- Issues in upstream Firecrawl services.
+- Vulnerabilities in third-party dependencies that don't reach firecrawl-lb's
   attack surface — file those upstream.
 - Self-inflicted misconfiguration (exposing the dashboard publicly without
   auth, leaking your own API keys via committed `.env`, etc.).

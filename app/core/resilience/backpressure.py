@@ -29,7 +29,7 @@ class BackpressureMiddleware:
             return
 
         if self._semaphore.locked():
-            message = "codex-lb is temporarily overloaded by local backpressure"
+            message = "firecrawl-lb is temporarily overloaded by local backpressure"
             if scope["type"] == "websocket":
                 await deny_websocket_with_http_response(
                     receive,

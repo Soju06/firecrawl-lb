@@ -152,3 +152,16 @@ The application SHALL expose Firecrawl and health/admin-support routes without m
 - **WHEN** a client requests `/v1/models` or `/api/oauth/status`
 - **THEN** the response SHALL be 404
 - **AND** Firecrawl `/v2/*` proxy routes SHALL remain available
+
+### Requirement: Firecrawl Deployment Artifacts
+
+Active deployment and release artifacts SHALL use the `firecrawl-lb` runtime identity, `FIRECRAWL_LB_` environment prefix, port `2465`, and `/var/lib/firecrawl-lb` container data path.
+
+#### Scenario: Deployment artifacts use Firecrawl identity
+
+- **GIVEN** an operator uses Docker, Compose, Helm, or release automation
+- **WHEN** the artifact starts, publishes, or installs firecrawl-lb
+- **THEN** the exposed HTTP service SHALL use port `2465`
+- **AND** runtime data SHALL be mounted under `/var/lib/firecrawl-lb`
+- **AND** chart, image, release, and workflow references SHALL use firecrawl-lb names
+- **AND** Codex/OpenAI/OAuth/session-bridge deployment settings SHALL NOT be required

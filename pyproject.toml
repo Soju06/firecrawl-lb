@@ -1,7 +1,7 @@
 [project]
 name = "firecrawl-lb"
 version = "1.20.0-beta.2"
-description = "Codex load balancer and proxy for ChatGPT accounts with usage dashboard"
+description = "Firecrawl load balancer and proxy with usage dashboard"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Soju06", email = "qlskssk@gmail.com" }]
@@ -11,11 +11,11 @@ maintainers = [
     { name = "aaiyer", email = "aaiyer0@proton.me" },
 ]
 keywords = [
-    "codex",
+    "firecrawl",
     "load-balancer",
     "proxy",
     "fastapi",
-    "chatgpt",
+    "api-gateway",
     "rate-limit",
     "usage",
     "dashboard",

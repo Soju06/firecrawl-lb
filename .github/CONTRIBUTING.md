@@ -1,6 +1,6 @@
-# Contributing to codex-lb
+# Contributing to firecrawl-lb
 
-Thanks for thinking about contributing to codex-lb! This document covers
+Thanks for thinking about contributing to firecrawl-lb! This document covers
 everything you need to get from "clone" to "merged PR" without re-discovering
 the conventions yourself.
 
@@ -38,25 +38,25 @@ You don't need to write code to help:
 - **Triage**: reproduce open issues, ask for missing details, add labels.
 - **Docs**: improve the README, fix typos, document a deployment recipe.
 - **Discussions**: answer "how do I…?" questions in
-  [GitHub Discussions](https://github.com/Soju06/codex-lb/discussions).
+  [GitHub Discussions](https://github.com/Soju06/firecrawl-lb/discussions).
 - **Bug reports**: file a structured report using the Bug Report issue form.
 - **Feature ideas**: propose them in Discussions first if open-ended; use the
   Feature Request form when the idea is concrete.
 - **Code**: fix a bug, implement a feature, refactor a hot spot.
 
 Look for issues labelled
-[`good first issue`](https://github.com/Soju06/codex-lb/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) or
-[`help wanted`](https://github.com/Soju06/codex-lb/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
+[`good first issue`](https://github.com/Soju06/firecrawl-lb/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) or
+[`help wanted`](https://github.com/Soju06/firecrawl-lb/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
 if you're looking for a starter task.
 
 ## Development setup
 
-codex-lb is a Python project managed with [`uv`](https://docs.astral.sh/uv/).
+firecrawl-lb is a Python project managed with [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
 # 1. Fork & clone
-git clone https://github.com/<your-user>/codex-lb.git
-cd codex-lb
+git clone https://github.com/<your-user>/firecrawl-lb.git
+cd firecrawl-lb
 
 # 2. Install Python + deps via uv
 uv sync --all-extras --dev
@@ -68,7 +68,7 @@ source .venv/bin/activate
 uv run pre-commit install
 
 # 5. Run the proxy locally
-uv run codex-lb --help
+uv run firecrawl-lb --help
 ```
 
 Frontend (dashboard) lives under `frontend/`. Use the project's standard
@@ -80,7 +80,7 @@ package manager (see `frontend/package.json`).
 .
 ├── app/                  # Python application (proxy, accounts, dashboard backend)
 ├── frontend/             # Dashboard SPA
-├── deploy/helm/codex-lb/ # Helm chart
+├── deploy/helm/firecrawl-lb/ # Helm chart
 ├── tests/
 │   ├── unit/             # Fast, isolated tests
 │   └── integration/      # End-to-end / network-touching tests
@@ -92,7 +92,7 @@ package manager (see `frontend/package.json`).
 
 ## Workflow: OpenSpec-first
 
-codex-lb uses **OpenSpec as the source of truth** for change-driven development.
+firecrawl-lb uses **OpenSpec as the source of truth** for change-driven development.
 You don't have to author OpenSpec entries for trivial fixes, but for anything
 that changes observable behavior, requirements, contracts, or schema, an
 OpenSpec change is expected.
@@ -142,7 +142,7 @@ make package
 
 ## Commit & PR conventions
 
-codex-lb uses **[Conventional Commits](https://www.conventionalcommits.org/)**
+firecrawl-lb uses **[Conventional Commits](https://www.conventionalcommits.org/)**
 because release-please derives the next version + changelog from them.
 
 Format:
@@ -169,9 +169,8 @@ Common `type`s:
 | `ci`        | CI configuration                                          |
 | `chore`     | Tooling / maintenance with no user-visible effect         |
 
-Common `scope`s used in this repo: `proxy`, `accounts`, `auth`, `oauth`,
-`quota`, `chat`, `proxy-responses`, `dashboard-auth`, `ui`, `db`, `types`,
-`openspec`, `main` (release).
+Common `scope`s used in this repo: `firecrawl`, `proxy`, `accounts`, `auth`,
+`dashboard-auth`, `ui`, `db`, `types`, `openspec`, `main` (release).
 
 **Breaking changes**: append `!` after the type/scope and/or add a
 `BREAKING CHANGE:` footer.
@@ -179,9 +178,9 @@ Common `scope`s used in this repo: `proxy`, `accounts`, `auth`, `oauth`,
 Examples (from the actual repo history):
 
 ```
-fix(proxy): handle model fetch timeouts
-fix(accounts): recover quota status from usage refresh
-feat(proxy): add OpenAI-compatible /v1/images API (gpt-image-2 via image_generation tool)
+fix(firecrawl): settle crawl credits once
+fix(accounts): recover Firecrawl usage status from refresh
+feat(firecrawl): add batch scrape job tracking
 fix(dashboard-auth): reject passwords longer than bcrypt's 72-byte limit
 ```
 
@@ -256,8 +255,8 @@ top of the merge gates above:
    - If a single PR is over **~800 net lines** and spans multiple
      concerns, split it into reviewable pieces. A single 1500-line
      change scoped to one capability is fine; a 400-line change that
-     touches the proxy hot path *and* the dashboard *and* the OAuth
-     flow is not.
+     touches the proxy hot path *and* the dashboard *and* release
+     automation is not.
 
 ### Bus factor escape hatch
 
@@ -318,7 +317,7 @@ manually.
 
 Please do **not** open public issues for security vulnerabilities. Report them
 privately via
-[GitHub Security Advisories](https://github.com/Soju06/codex-lb/security/advisories/new).
+[GitHub Security Advisories](https://github.com/Soju06/firecrawl-lb/security/advisories/new).
 See [SECURITY.md](./SECURITY.md) for full details.
 
 ---

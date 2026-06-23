@@ -12,7 +12,7 @@ body:
         Use this form for problems like:
         - Account stuck "Rate-limited" / "Disabled" when it shouldn't be
         - Quota / usage values look wrong in the dashboard
-        - Refresh / OAuth callback fails for one or more accounts
+        - Firecrawl team usage refresh fails for one or more accounts
         - "Requested account is always the same" routing imbalance
 
   - type: checkboxes
@@ -28,7 +28,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: codex-lb version
+      label: firecrawl-lb version
       placeholder: "1.17.0"
     validations:
       required: true
@@ -39,14 +39,9 @@ body:
       label: Affected account plan(s)
       multiple: true
       options:
-        - Free
-        - Plus
-        - Pro
         - Team
-        - Business
         - Enterprise
-        - Edu
-        - API-key only
+        - API key
         - Mixed pool
     validations:
       required: true
@@ -62,7 +57,7 @@ body:
         - Quota / usage values are wrong
         - Quota reset time is wrong / missing
         - Same account always picked (load-balancing imbalance)
-        - OAuth / refresh / token failure
+        - Firecrawl refresh failure
         - Dashboard display bug only
         - Other
     validations:
@@ -74,7 +69,7 @@ body:
       label: What does the dashboard / logs show?
       description: |
         Paste the relevant rows from the **Accounts** dashboard view (you can
-        crop sensitive bits) and any related lines from the codex-lb log. Mask
+        crop sensitive bits) and any related lines from the firecrawl-lb log. Mask
         emails, account IDs, and tokens.
       render: markdown
     validations:
@@ -90,9 +85,8 @@ body:
     attributes:
       label: Last observed quota reset time (UTC)
       description: |
-        From the dashboard or `/v1/usage`. Use the most recent reset for the
-        affected account — primary/5h quota row preferred. Leave blank if not
-        applicable (e.g. dashboard-only display bug).
+        From the dashboard or Firecrawl billing state. Leave blank if not
+        applicable.
       placeholder: "2026-05-14 03:00 UTC"
 
   - type: textarea
@@ -100,7 +94,7 @@ body:
     attributes:
       label: When did it start?
       description: |
-        E.g. "after upgrading from 1.15.0 → 1.16.0", "after a 429 burst at 03:00 UTC",
+        E.g. "after upgrading from 1.15.0 -> 1.16.0", "after a 429 burst at 03:00 UTC",
         "right after I added a new account".
 
   - type: textarea

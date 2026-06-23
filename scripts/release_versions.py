@@ -1,4 +1,4 @@
-"""Release version helpers for codex-lb release workflows.
+"""Release version helpers for firecrawl-lb release workflows.
 
 The GitHub workflows intentionally use this stdlib-only module so that release
 metadata can be validated before project dependencies are installed.
@@ -137,7 +137,7 @@ def update_project_versions(root: Path, version: str) -> None:
     package_data["version"] = version
     _write_text(package_json, json.dumps(package_data, indent=2, ensure_ascii=False) + "\n")
 
-    chart = root / "deploy" / "helm" / "codex-lb" / "Chart.yaml"
+    chart = root / "deploy" / "helm" / "firecrawl-lb" / "Chart.yaml"
     chart_text = chart.read_text(encoding="utf-8")
     chart_text = _replace_once(chart_text, r"^version: .*$", f"version: {version}", path=str(chart))
     chart_text = _replace_once(chart_text, r"^appVersion: .*$", f"appVersion: {version}", path=str(chart))
@@ -146,19 +146,19 @@ def update_project_versions(root: Path, version: str) -> None:
     uv_lock = root / "uv.lock"
     uv_text = uv_lock.read_text(encoding="utf-8")
     uv_text, count = re.subn(
-        r'(\[\[package\]\]\nname = "codex-lb"\nversion = ")[^"]+("\nsource = \{ editable = "\." \})',
+        r'(\[\[package\]\]\nname = "firecrawl-lb"\nversion = ")[^"]+("\nsource = \{ editable = "\." \})',
         rf"\g<1>{version}\2",
         uv_text,
         count=1,
     )
     if count != 1:
-        raise ValueError("expected exactly one codex-lb package entry in uv.lock")
+        raise ValueError("expected exactly one firecrawl-lb package entry in uv.lock")
     _write_text(uv_lock, uv_text)
 
 
 def read_project_versions(root: Path) -> dict[str, str]:
     package_data = json.loads((root / "frontend" / "package.json").read_text(encoding="utf-8"))
-    chart_text = (root / "deploy" / "helm" / "codex-lb" / "Chart.yaml").read_text(encoding="utf-8")
+    chart_text = (root / "deploy" / "helm" / "firecrawl-lb" / "Chart.yaml").read_text(encoding="utf-8")
     uv_text = (root / "uv.lock").read_text(encoding="utf-8")
 
     def find(pattern: str, text: str, name: str) -> str:
@@ -175,12 +175,12 @@ def read_project_versions(root: Path) -> dict[str, str]:
             "app version",
         ),
         "frontend/package.json": package_data["version"],
-        "deploy/helm/codex-lb/Chart.yaml version": find(r"^version: (.+)$", chart_text, "chart version"),
-        "deploy/helm/codex-lb/Chart.yaml appVersion": find(r"^appVersion: (.+)$", chart_text, "chart appVersion"),
+        "deploy/helm/firecrawl-lb/Chart.yaml version": find(r"^version: (.+)$", chart_text, "chart version"),
+        "deploy/helm/firecrawl-lb/Chart.yaml appVersion": find(r"^appVersion: (.+)$", chart_text, "chart appVersion"),
         "uv.lock": find(
-            r'\[\[package\]\]\nname = "codex-lb"\nversion = "([^"]+)"\nsource = \{ editable = "\." \}',
+            r'\[\[package\]\]\nname = "firecrawl-lb"\nversion = "([^"]+)"\nsource = \{ editable = "\." \}',
             uv_text,
-            "uv.lock codex-lb version",
+            "uv.lock firecrawl-lb version",
         ),
     }
 
