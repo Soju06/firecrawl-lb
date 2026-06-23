@@ -91,11 +91,8 @@ def _estimate_search_scrape_reservation(
     source_count: int,
     scrape_options: JsonObject,
 ) -> int:
-    scrape_credits = _estimate_scrape_credits(scrape_options)
-    reservation = limit * scrape_credits
-    if source_count > 1:
-        reservation += ceil(limit / 10) + source_count + 1
-    return reservation
+    del source_count
+    return limit * _estimate_scrape_credits(scrape_options)
 
 
 def _normalized_scrape_formats(formats: object) -> set[str]:

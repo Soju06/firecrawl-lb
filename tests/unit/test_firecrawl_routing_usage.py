@@ -24,7 +24,7 @@ def test_search_credit_estimate_scales_by_limit_sources_and_scrape_options() -> 
         },
     )
 
-    assert estimate == 46
+    assert estimate == 41
 
 
 def test_scrape_uses_response_credits_when_present() -> None:
