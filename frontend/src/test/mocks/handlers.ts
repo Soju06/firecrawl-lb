@@ -400,7 +400,115 @@ export const handlers = [
       updateAvailable: false,
       checkedAt: "2026-05-26T00:00:00Z",
       source: "github",
-      releaseUrl: "https://github.com/Soju06/codex-lb/releases/latest",
+      releaseUrl: "https://github.com/Soju06/firecrawl-lb/releases/latest",
+    });
+  }),
+
+  http.get("/v2/admin/firecrawl/overview", () => {
+    return HttpResponse.json({
+      total_accounts: 2,
+      active_accounts: 1,
+      total_remaining_credits: 1400,
+      total_budget_credits: 2000,
+      accounts_by_status: {
+        active: 1,
+        rate_limited: 0,
+        credit_exhausted: 0,
+        paused: 1,
+      },
+      active_jobs: 1,
+      recent_requests: { total: 3, success: 2, error: 1 },
+      endpoint_breakdown: {
+        scrape: 1,
+        map: 1,
+        search: 1,
+        crawl: 1,
+        batch_scrape: 0,
+      },
+    });
+  }),
+
+  http.get("/v2/admin/firecrawl/accounts", () => {
+    return HttpResponse.json({
+      accounts: [
+        {
+          id: "fc-primary",
+          team_label: "Primary Firecrawl",
+          plan_type: "scale",
+          status: "active",
+          monthly_budget_credits: 1000,
+          remaining_credits_live: 900,
+          plan_credits_live: 1000,
+          rpm_limit: 120,
+          max_concurrency: 5,
+          cooldown_until: null,
+          credentials: [{ id: "cred-primary", name: "Primary", status: "active" }],
+        },
+        {
+          id: "fc-secondary",
+          team_label: "Secondary Firecrawl",
+          plan_type: "starter",
+          status: "paused",
+          monthly_budget_credits: 1000,
+          remaining_credits_live: 500,
+          plan_credits_live: 1000,
+          rpm_limit: 60,
+          max_concurrency: 2,
+          cooldown_until: null,
+          credentials: [],
+        },
+      ],
+    });
+  }),
+
+  http.get("/v2/admin/firecrawl/jobs", () => {
+    return HttpResponse.json({
+      jobs: [
+        {
+          id: 1,
+          account_id: "fc-primary",
+          credential_id: "cred-primary",
+          endpoint: "crawl",
+          upstream_job_id: "crawl-1",
+          status: "submitted",
+          estimated_credits_reserved: 4,
+          credits_used_final: null,
+          created_at: "2026-06-23T12:00:00",
+          completed_at: null,
+          last_polled_at: null,
+        },
+      ],
+    });
+  }),
+
+  http.get("/v2/admin/firecrawl/logs", () => {
+    return HttpResponse.json({
+      logs: [
+        {
+          id: 1,
+          account_id: "fc-primary",
+          credential_id: "cred-primary",
+          endpoint: "scrape",
+          upstream_job_id: null,
+          status: "success",
+          upstream_status_code: 200,
+          estimated_credits_pre: 1,
+          credits_used_final: 1,
+          latency_ms: 123,
+          error_code: null,
+          error_message: null,
+          created_at: "2026-06-23T12:00:00",
+        },
+      ],
+    });
+  }),
+
+  http.get("/api/settings/firecrawl-runtime", () => {
+    return HttpResponse.json({
+      refresh_scheduler_enabled: true,
+      data_dir: "/tmp/firecrawl-lb",
+      database_url_masked: "sqlite+aiosqlite:////tmp/firecrawl-lb/store.db",
+      encryption_key_file: "/tmp/firecrawl-lb/encryption.key",
     });
   }),
 

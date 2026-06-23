@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,6 +30,9 @@ from app.modules.firecrawl.schemas import (
     FirecrawlCredentialCreateRequest,
     FirecrawlCredentialResponse,
     FirecrawlCredentialUpdateRequest,
+    FirecrawlJobsResponse,
+    FirecrawlOverviewResponse,
+    FirecrawlRequestLogsResponse,
 )
 from app.modules.firecrawl.service import FirecrawlProxyService, no_account_response
 
@@ -58,6 +62,41 @@ async def list_admin_firecrawl_accounts(
 ) -> FirecrawlAccountsResponse:
     del _admin
     return await service.list_accounts()
+
+
+@router.get("/admin/firecrawl/jobs", response_model=FirecrawlJobsResponse)
+async def list_admin_firecrawl_jobs(
+    endpoint: Literal["crawl", "batch_scrape"] | None = None,
+    status: str | None = None,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    _admin: None = Depends(require_firecrawl_admin),
+    service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
+) -> FirecrawlJobsResponse:
+    del _admin
+    return await service.list_jobs(endpoint=endpoint, status=status, limit=limit, offset=offset)
+
+
+@router.get("/admin/firecrawl/logs", response_model=FirecrawlRequestLogsResponse)
+async def list_admin_firecrawl_logs(
+    endpoint: Literal["scrape", "map", "search"] | None = None,
+    status: str | None = None,
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    _admin: None = Depends(require_firecrawl_admin),
+    service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
+) -> FirecrawlRequestLogsResponse:
+    del _admin
+    return await service.list_logs(endpoint=endpoint, status=status, limit=limit, offset=offset)
+
+
+@router.get("/admin/firecrawl/overview", response_model=FirecrawlOverviewResponse)
+async def get_admin_firecrawl_overview(
+    _admin: None = Depends(require_firecrawl_admin),
+    service: FirecrawlAdminService = Depends(get_firecrawl_admin_service),
+) -> FirecrawlOverviewResponse:
+    del _admin
+    return await service.get_overview()
 
 
 @router.post(

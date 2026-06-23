@@ -28,7 +28,7 @@ describe("StatusBar", () => {
 
     const link = screen.getByRole("link", { name: "Open official GitHub repository" });
 
-    expect(link).toHaveAttribute("href", "https://github.com/soju06/codex-lb");
+    expect(link).toHaveAttribute("href", "https://github.com/soju06/firecrawl-lb");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noreferrer");
   });
@@ -42,7 +42,7 @@ describe("StatusBar", () => {
           updateAvailable: true,
           checkedAt: "2026-05-26T00:00:00Z",
           source: "github",
-          releaseUrl: "https://github.com/Soju06/codex-lb/releases/latest",
+          releaseUrl: "https://github.com/Soju06/firecrawl-lb/releases/latest",
         }),
       ),
     );
@@ -53,7 +53,7 @@ describe("StatusBar", () => {
       name: "New version available: 1.20.0. Open release notes.",
     });
 
-    expect(link).toHaveAttribute("href", "https://github.com/Soju06/codex-lb/releases/latest");
+    expect(link).toHaveAttribute("href", "https://github.com/Soju06/firecrawl-lb/releases/latest");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noreferrer");
   });

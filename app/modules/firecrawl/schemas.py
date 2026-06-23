@@ -6,16 +6,25 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 ACCOUNT_STATUS_PATTERN = r"^(active|rate_limited|credit_exhausted|paused|invalid)$"
 CREDENTIAL_STATUS_PATTERN = r"^(active|paused|invalid)$"
+JOB_ENDPOINT_PATTERN = r"^(crawl|batch_scrape)$"
+REQUEST_LOG_ENDPOINT_PATTERN = r"^(scrape|map|search)$"
 
 
 class FirecrawlAdminModel(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    @field_serializer("cooldown_until", check_fields=False, when_used="json")
+    @field_serializer(
+        "cooldown_until",
+        "created_at",
+        "completed_at",
+        "last_polled_at",
+        check_fields=False,
+        when_used="json",
+    )
     def serialize_datetime_as_utc(self, value: datetime | None) -> str | None:
         if isinstance(value, datetime):
             if value.tzinfo is None:
-                return value.isoformat() + "Z"
+                return value.isoformat()
             return value.isoformat().replace("+00:00", "Z")
         return None
 
@@ -42,6 +51,76 @@ class FirecrawlAccountResponse(FirecrawlAdminModel):
 
 class FirecrawlAccountsResponse(FirecrawlAdminModel):
     accounts: list[FirecrawlAccountResponse]
+
+
+class FirecrawlJobResponse(FirecrawlAdminModel):
+    id: int
+    account_id: str | None
+    credential_id: str | None
+    endpoint: str = Field(pattern=JOB_ENDPOINT_PATTERN)
+    upstream_job_id: str | None
+    status: str
+    estimated_credits_reserved: int | None
+    credits_used_final: int | None
+    created_at: datetime
+    completed_at: datetime | None
+    last_polled_at: datetime | None
+
+
+class FirecrawlJobsResponse(FirecrawlAdminModel):
+    jobs: list[FirecrawlJobResponse]
+
+
+class FirecrawlRequestLogResponse(FirecrawlAdminModel):
+    id: int
+    account_id: str | None
+    credential_id: str | None
+    endpoint: str = Field(pattern=REQUEST_LOG_ENDPOINT_PATTERN)
+    upstream_job_id: str | None
+    status: str
+    upstream_status_code: int | None
+    estimated_credits_pre: int | None
+    credits_used_final: int | None
+    latency_ms: int | None
+    error_code: str | None
+    error_message: str | None
+    created_at: datetime
+
+
+class FirecrawlRequestLogsResponse(FirecrawlAdminModel):
+    logs: list[FirecrawlRequestLogResponse]
+
+
+class FirecrawlAccountsByStatusResponse(FirecrawlAdminModel):
+    active: int
+    rate_limited: int
+    credit_exhausted: int
+    paused: int
+
+
+class FirecrawlRecentRequestsResponse(FirecrawlAdminModel):
+    total: int
+    success: int
+    error: int
+
+
+class FirecrawlEndpointBreakdownResponse(FirecrawlAdminModel):
+    scrape: int
+    map: int
+    search: int
+    crawl: int
+    batch_scrape: int
+
+
+class FirecrawlOverviewResponse(FirecrawlAdminModel):
+    total_accounts: int
+    active_accounts: int
+    total_remaining_credits: int
+    total_budget_credits: int
+    accounts_by_status: FirecrawlAccountsByStatusResponse
+    active_jobs: int
+    recent_requests: FirecrawlRecentRequestsResponse
+    endpoint_breakdown: FirecrawlEndpointBreakdownResponse
 
 
 class FirecrawlAccountCreateRequest(FirecrawlAdminModel):

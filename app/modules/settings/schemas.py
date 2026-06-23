@@ -98,6 +98,13 @@ class RuntimeConnectAddressResponse(DashboardModel):
     connect_address: str
 
 
+class FirecrawlRuntimeSettingsResponse(DashboardModel):
+    refresh_scheduler_enabled: bool
+    data_dir: str
+    database_url_masked: str
+    encryption_key_file: str
+
+
 class UpstreamProxyEndpointCreateRequest(DashboardModel):
     name: str = Field(min_length=1, max_length=128)
     scheme: str = Field(pattern=r"^(http|https|socks5|socks5h)$")

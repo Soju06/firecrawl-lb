@@ -59,6 +59,30 @@ The application SHALL expose Firecrawl account and credential management APIs un
 - **THEN** the API SHALL return 404
 - **AND** duplicate account or credential ids SHALL return a clean 409 or 400 response without exposing a raw stacktrace
 
+### Requirement: Firecrawl Dashboard Administration
+
+The application SHALL expose Firecrawl dashboard read APIs under `/v2/admin/firecrawl/jobs`, `/v2/admin/firecrawl/logs`, and `/v2/admin/firecrawl/overview`.
+
+#### Scenario: Operator lists persisted jobs
+
+- **GIVEN** persisted crawl and batch scrape jobs
+- **WHEN** an operator requests `/v2/admin/firecrawl/jobs` with optional endpoint, status, limit, and offset filters
+- **THEN** the API SHALL return matching job records ordered by `created_at` descending
+- **AND** each job SHALL include account, credential, endpoint, upstream id, status, reserved credit, final credit, creation, completion, and last-polled fields
+
+#### Scenario: Operator lists persisted sync request logs
+
+- **GIVEN** persisted scrape, map, and search request logs
+- **WHEN** an operator requests `/v2/admin/firecrawl/logs` with optional endpoint, status, limit, and offset filters
+- **THEN** the API SHALL return matching request logs ordered by creation time descending
+- **AND** each log SHALL include account, credential, endpoint, upstream status, credit, latency, error, and creation fields
+
+#### Scenario: Operator views Firecrawl overview
+
+- **GIVEN** persisted Firecrawl accounts, jobs, and request logs
+- **WHEN** an operator requests `/v2/admin/firecrawl/overview`
+- **THEN** the API SHALL return total accounts, active accounts, remaining and budget credits, accounts by status, active job count, recent request totals, and endpoint breakdowns
+
 ### Requirement: Firecrawl Admin Guard
 
 Firecrawl administrative routes under `/v2/admin/firecrawl/*` SHALL require dashboard/admin authorization through an overrideable FastAPI dependency.

@@ -8,7 +8,7 @@ import { renderWithProviders } from "@/test/utils";
 import { server } from "@/test/mocks/server";
 
 describe("auth flow integration", () => {
-  it("flows from login to totp to dashboard", async () => {
+  it("flows from login to totp to overview", async () => {
     const user = userEvent.setup({ delay: null });
 
     server.use(
@@ -44,7 +44,7 @@ describe("auth flow integration", () => {
       ),
     );
 
-    window.history.pushState({}, "", "/dashboard");
+    window.history.pushState({}, "", "/overview");
     renderWithProviders(<App />);
 
     expect(await screen.findByText("Sign in")).toBeInTheDocument();
@@ -56,9 +56,8 @@ describe("auth flow integration", () => {
 
     await user.type(screen.getByLabelText("TOTP code"), "123456");
 
-    // Auto-submit triggers on 6-digit completion via onComplete
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
     });
   });
 });

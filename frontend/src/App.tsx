@@ -6,10 +6,11 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthGate } from "@/features/auth/components/auth-gate";
 import { useAuthStore } from "@/features/auth/hooks/use-auth";
-import { AccountsPage } from "@/features/accounts/components/accounts-page";
-import { ApisPage } from "@/features/apis/components/apis-page";
-import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
-import { SettingsPage } from "@/features/settings/components/settings-page";
+import { FirecrawlAccountsPage } from "@/features/firecrawl/components/accounts-page";
+import { JobsPage } from "@/features/firecrawl/components/jobs-page";
+import { LogsPage } from "@/features/firecrawl/components/logs-page";
+import { OverviewPage } from "@/features/firecrawl/components/overview-page";
+import { SettingsPage } from "@/features/firecrawl/components/settings-page";
 import { useTimeFormatStore } from "@/hooks/use-time-format";
 
 function AppLayout() {
@@ -40,12 +41,12 @@ export default function App() {
       <AuthGate>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/accounts" element={<AccountsPage />} />
-            <Route path="/apis" element={<ApisPage />} />
+            <Route path="/" element={<Navigate to="/overview" replace />} />
+            <Route path="/overview" element={<OverviewPage />} />
+            <Route path="/accounts" element={<FirecrawlAccountsPage />} />
+            <Route path="/jobs" element={<JobsPage />} />
+            <Route path="/logs" element={<LogsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/firewall" element={<Navigate to="/settings" replace />} />
           </Route>
         </Routes>
       </AuthGate>

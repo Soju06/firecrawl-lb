@@ -6,7 +6,12 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from app.core.crypto import TokenEncryptor
-from app.db.models import FirecrawlAccountRecord, FirecrawlCredentialRecord
+from app.db.models import (
+    FirecrawlAccountRecord,
+    FirecrawlCredentialRecord,
+    FirecrawlJobRecord,
+    FirecrawlRequestLogRecord,
+)
 from app.db.session import SessionLocal
 from app.modules.firecrawl import api as firecrawl_api
 
@@ -157,6 +162,231 @@ async def test_admin_returns_clean_errors_for_missing_and_duplicate_records(asyn
     assert duplicate_credential.json()["detail"] == "Firecrawl credential already exists"
     assert "Traceback" not in duplicate_account.text
     assert "Traceback" not in duplicate_credential.text
+
+
+async def test_admin_lists_jobs_with_filters_ordered_by_created_at(async_client: AsyncClient) -> None:
+    # Given: persisted crawl and batch scrape jobs for different accounts.
+    await _insert_account_with_credential()
+    async with SessionLocal() as session:
+        session.add_all(
+            [
+                FirecrawlJobRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="crawl",
+                    upstream_job_id="crawl-old",
+                    status="completed",
+                    estimated_credits_reserved=3,
+                    credits_used_final=2,
+                    created_at=datetime(2026, 6, 23, 10, 0),
+                    completed_at=datetime(2026, 6, 23, 10, 5),
+                    last_polled_at=datetime(2026, 6, 23, 10, 5),
+                ),
+                FirecrawlJobRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="crawl",
+                    upstream_job_id="crawl-new",
+                    status="submitted",
+                    estimated_credits_reserved=4,
+                    created_at=datetime(2026, 6, 23, 11, 0),
+                ),
+                FirecrawlJobRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="batch_scrape",
+                    upstream_job_id="batch-1",
+                    status="failed",
+                    created_at=datetime(2026, 6, 23, 12, 0),
+                ),
+            ]
+        )
+        await session.commit()
+
+    # When: the operator filters for crawl jobs.
+    response = await async_client.get("/v2/admin/firecrawl/jobs?endpoint=crawl&limit=10&offset=0")
+
+    # Then: only matching jobs are returned newest first.
+    assert response.status_code == 200
+    assert response.json() == {
+        "jobs": [
+            {
+                "id": 2,
+                "account_id": "fc-account-1",
+                "credential_id": "fc-credential-1",
+                "endpoint": "crawl",
+                "upstream_job_id": "crawl-new",
+                "status": "submitted",
+                "estimated_credits_reserved": 4,
+                "credits_used_final": None,
+                "created_at": "2026-06-23T11:00:00",
+                "completed_at": None,
+                "last_polled_at": None,
+            },
+            {
+                "id": 1,
+                "account_id": "fc-account-1",
+                "credential_id": "fc-credential-1",
+                "endpoint": "crawl",
+                "upstream_job_id": "crawl-old",
+                "status": "completed",
+                "estimated_credits_reserved": 3,
+                "credits_used_final": 2,
+                "created_at": "2026-06-23T10:00:00",
+                "completed_at": "2026-06-23T10:05:00",
+                "last_polled_at": "2026-06-23T10:05:00",
+            },
+        ]
+    }
+
+
+async def test_admin_lists_request_logs_with_filters_ordered_by_created_at(async_client: AsyncClient) -> None:
+    # Given: persisted sync request logs across endpoints and statuses.
+    await _insert_account_with_credential()
+    async with SessionLocal() as session:
+        session.add_all(
+            [
+                FirecrawlRequestLogRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="scrape",
+                    upstream_job_id="scrape-1",
+                    requested_at=datetime(2026, 6, 23, 9, 0),
+                    status="success",
+                    upstream_status_code=200,
+                    estimated_credits_pre=1,
+                    credits_used_final=1,
+                    latency_ms=123,
+                ),
+                FirecrawlRequestLogRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="scrape",
+                    requested_at=datetime(2026, 6, 23, 10, 0),
+                    status="error",
+                    upstream_status_code=500,
+                    estimated_credits_pre=1,
+                    latency_ms=456,
+                    error_code="upstream_error",
+                    error_message="Upstream failed",
+                ),
+                FirecrawlRequestLogRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="map",
+                    requested_at=datetime(2026, 6, 23, 11, 0),
+                    status="success",
+                ),
+            ]
+        )
+        await session.commit()
+
+    # When: the operator filters for scrape logs.
+    response = await async_client.get("/v2/admin/firecrawl/logs?endpoint=scrape&limit=10&offset=0")
+
+    # Then: only matching logs are returned newest first using the public created_at field.
+    assert response.status_code == 200
+    assert response.json() == {
+        "logs": [
+            {
+                "id": 2,
+                "account_id": "fc-account-1",
+                "credential_id": "fc-credential-1",
+                "endpoint": "scrape",
+                "upstream_job_id": None,
+                "status": "error",
+                "upstream_status_code": 500,
+                "estimated_credits_pre": 1,
+                "credits_used_final": None,
+                "latency_ms": 456,
+                "error_code": "upstream_error",
+                "error_message": "Upstream failed",
+                "created_at": "2026-06-23T10:00:00",
+            },
+            {
+                "id": 1,
+                "account_id": "fc-account-1",
+                "credential_id": "fc-credential-1",
+                "endpoint": "scrape",
+                "upstream_job_id": "scrape-1",
+                "status": "success",
+                "upstream_status_code": 200,
+                "estimated_credits_pre": 1,
+                "credits_used_final": 1,
+                "latency_ms": 123,
+                "error_code": None,
+                "error_message": None,
+                "created_at": "2026-06-23T09:00:00",
+            },
+        ]
+    }
+
+
+async def test_admin_overview_aggregates_firecrawl_state(async_client: AsyncClient) -> None:
+    # Given: accounts, active jobs, and recent request logs exist.
+    await _insert_account_with_credential()
+    async with SessionLocal() as session:
+        session.add(
+            FirecrawlAccountRecord(
+                id="fc-account-2",
+                team_label="team two",
+                plan_type="standard",
+                status="paused",
+                monthly_budget_credits=200,
+                remaining_credits_live=50,
+            )
+        )
+        session.add_all(
+            [
+                FirecrawlJobRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="crawl",
+                    upstream_job_id="crawl-active",
+                    status="submitted",
+                    created_at=datetime(2026, 6, 23, 10, 0),
+                ),
+                FirecrawlJobRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="batch_scrape",
+                    upstream_job_id="batch-complete",
+                    status="completed",
+                    created_at=datetime(2026, 6, 23, 9, 0),
+                ),
+                FirecrawlRequestLogRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="scrape",
+                    requested_at=datetime(2026, 6, 23, 8, 0),
+                    status="success",
+                ),
+                FirecrawlRequestLogRecord(
+                    account_id="fc-account-1",
+                    credential_id="fc-credential-1",
+                    endpoint="search",
+                    requested_at=datetime(2026, 6, 23, 8, 1),
+                    status="error",
+                ),
+            ]
+        )
+        await session.commit()
+
+    # When: the operator requests the Firecrawl overview.
+    response = await async_client.get("/v2/admin/firecrawl/overview")
+
+    # Then: aggregate values cover accounts, active jobs, requests, and endpoint counts.
+    assert response.status_code == 200
+    assert response.json() == {
+        "total_accounts": 2,
+        "active_accounts": 1,
+        "total_remaining_credits": 950,
+        "total_budget_credits": 1200,
+        "accounts_by_status": {"active": 1, "rate_limited": 0, "credit_exhausted": 0, "paused": 1},
+        "active_jobs": 1,
+        "recent_requests": {"total": 2, "success": 1, "error": 1},
+        "endpoint_breakdown": {"scrape": 1, "map": 0, "search": 1, "crawl": 1, "batch_scrape": 1},
+    }
 
 
 async def _insert_account_with_credential() -> None:

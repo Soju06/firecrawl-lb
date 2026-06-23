@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.audit.service import AuditService
 from app.core.auth.dependencies import set_dashboard_error_format, validate_dashboard_session
+from app.core.config.settings import get_settings as get_runtime_settings
 from app.core.config.settings_cache import get_settings_cache
 from app.core.crypto import TokenEncryptor
 from app.core.exceptions import DashboardBadRequestError
@@ -21,6 +22,7 @@ from app.modules.settings.schemas import (
     AdditionalQuotaPolicy,
     DashboardSettingsResponse,
     DashboardSettingsUpdateRequest,
+    FirecrawlRuntimeSettingsResponse,
     RuntimeConnectAddressResponse,
     UpstreamProxyAdminResponse,
     UpstreamProxyEndpointCreateRequest,
@@ -134,12 +136,32 @@ def _dashboard_settings_response(settings) -> DashboardSettingsResponse:
     )
 
 
+def _mask_database_url(database_url: str) -> str:
+    scheme_separator = "://"
+    if scheme_separator not in database_url or "@" not in database_url:
+        return database_url
+    scheme, remainder = database_url.split(scheme_separator, 1)
+    _credentials, host_part = remainder.rsplit("@", 1)
+    return f"{scheme}{scheme_separator}***@{host_part}"
+
+
 @router.get("", response_model=DashboardSettingsResponse)
 async def get_settings(
     context: SettingsContext = Depends(get_settings_context),
 ) -> DashboardSettingsResponse:
     settings = await context.service.get_settings()
     return _dashboard_settings_response(settings)
+
+
+@router.get("/firecrawl-runtime", response_model=FirecrawlRuntimeSettingsResponse)
+async def get_firecrawl_runtime_settings() -> FirecrawlRuntimeSettingsResponse:
+    settings = get_runtime_settings()
+    return FirecrawlRuntimeSettingsResponse(
+        refresh_scheduler_enabled=settings.usage_refresh_enabled,
+        data_dir=str(settings.data_dir),
+        database_url_masked=_mask_database_url(settings.database_url),
+        encryption_key_file=str(settings.encryption_key_file),
+    )
 
 
 @router.get("/runtime/connect-address", response_model=RuntimeConnectAddressResponse)

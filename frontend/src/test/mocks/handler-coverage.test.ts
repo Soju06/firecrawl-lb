@@ -24,6 +24,10 @@ const EXPECTED_ENDPOINTS = [
 	"GET /health",
 	// runtime
 	"GET /api/runtime/version",
+	"GET /v2/admin/firecrawl/overview",
+	"GET /v2/admin/firecrawl/accounts",
+	"GET /v2/admin/firecrawl/jobs",
+	"GET /v2/admin/firecrawl/logs",
 	// dashboard
 	"GET /api/dashboard/overview",
 	"GET /api/dashboard/projections",
@@ -59,6 +63,7 @@ const EXPECTED_ENDPOINTS = [
 	"POST /api/dashboard-auth/logout",
 	// settings
 	"GET /api/settings",
+	"GET /api/settings/firecrawl-runtime",
 	"PUT /api/settings",
 	"GET /api/settings/upstream-proxy",
 	"POST /api/settings/upstream-proxy/endpoints",

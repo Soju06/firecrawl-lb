@@ -1,17 +1,17 @@
-import { Eye, EyeOff, LogOut, Menu } from "lucide-react";
+import { Eye, EyeOff, Flame, LogOut, Menu } from "lucide-react";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
-import { CodexLogo } from "@/components/brand/codex-logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { usePrivacyStore } from "@/hooks/use-privacy";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard" },
+  { to: "/overview", label: "Overview" },
   { to: "/accounts", label: "Accounts" },
-  { to: "/apis", label: "APIs" },
+  { to: "/jobs", label: "Jobs" },
+  { to: "/logs", label: "Logs" },
   { to: "/settings", label: "Settings" },
 ] as const;
 
@@ -41,11 +41,11 @@ export function AppHeader({
       <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5">
-            <CodexLogo size={20} className="text-primary" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
+            <Flame className="h-5 w-5 text-orange-500" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-tight">Codex LB</p>
+            <p className="truncate text-sm font-semibold tracking-tight">Firecrawl LB</p>
           </div>
         </div>
 
@@ -104,10 +104,10 @@ export function AppHeader({
             <SheetContent side="right" className="w-72">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
-                    <CodexLogo size={16} className="text-primary" />
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10">
+                    <Flame className="h-4 w-4 text-orange-500" aria-hidden="true" />
                   </div>
-                  <span className="text-sm font-semibold">Codex LB</span>
+                  <span className="text-sm font-semibold">Firecrawl LB</span>
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-0.5 px-4 pt-2">

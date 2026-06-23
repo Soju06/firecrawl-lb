@@ -43,6 +43,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": proxyTarget,
+      "/v2": proxyTarget,
       "/v1": proxyTarget,
       "/backend-api": proxyTarget,
       "/health": proxyTarget,

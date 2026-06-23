@@ -43,6 +43,38 @@ class FirecrawlRepository:
         )
         return list(result.scalars().unique().all())
 
+    async def list_job_records(
+        self,
+        *,
+        endpoint: str | None = None,
+        status: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[FirecrawlJobRecord]:
+        statement = select(FirecrawlJobRecord).order_by(FirecrawlJobRecord.created_at.desc())
+        if endpoint is not None:
+            statement = statement.where(FirecrawlJobRecord.endpoint == endpoint)
+        if status is not None:
+            statement = statement.where(FirecrawlJobRecord.status == status)
+        result = await self._session.execute(statement.limit(limit).offset(offset))
+        return list(result.scalars().all())
+
+    async def list_request_logs(
+        self,
+        *,
+        endpoint: str | None = None,
+        status: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[FirecrawlRequestLogRecord]:
+        statement = select(FirecrawlRequestLogRecord).order_by(FirecrawlRequestLogRecord.requested_at.desc())
+        if endpoint is not None:
+            statement = statement.where(FirecrawlRequestLogRecord.endpoint == endpoint)
+        if status is not None:
+            statement = statement.where(FirecrawlRequestLogRecord.status == status)
+        result = await self._session.execute(statement.limit(limit).offset(offset))
+        return list(result.scalars().all())
+
     async def get_account_record(self, account_id: str) -> FirecrawlAccountRecord | None:
         result = await self._session.execute(
             select(FirecrawlAccountRecord)

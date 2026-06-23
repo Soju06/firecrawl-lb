@@ -47,3 +47,12 @@
 - [x] Run ruff on changed app/test paths.
 - [x] Run ty on changed app/test paths.
 - [x] Run strict OpenSpec validation.
+
+## 7. Frontend dashboard cutover
+
+- [x] Specify Firecrawl dashboard job/log/overview read APIs.
+- [x] Add RED tests for Firecrawl admin job list, request-log list, and overview aggregation.
+- [x] Implement Firecrawl admin job, request-log, and overview endpoints.
+- [x] Replace old dashboard routes with Firecrawl overview, accounts, jobs, logs, and settings pages.
+- [x] Run frontend typecheck and build.
+- [x] Run targeted backend pytest, ruff, ty, and OpenSpec validation.
