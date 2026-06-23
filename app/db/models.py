@@ -362,6 +362,7 @@ class FirecrawlAccountRecord(Base):
     monthly_budget_credits: Mapped[int | None] = mapped_column(Integer, nullable=True)
     remaining_credits_live: Mapped[int | None] = mapped_column(Integer, nullable=True)
     plan_credits_live: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rpm_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
     billing_period_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     billing_period_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     queue_active_jobs: Mapped[int | None] = mapped_column(Integer, nullable=True)

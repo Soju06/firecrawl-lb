@@ -20,3 +20,14 @@
 - [x] Run targeted pytest.
 - [x] Run ruff on changed app/test paths.
 - [x] Run ty on changed app/test paths.
+
+## 5. Account administration
+
+- [x] Specify Firecrawl account and credential admin management behavior.
+- [x] Add endpoint-level RED tests for account create/list/detail, credential add/update, not-found, duplicate, and secret redaction behavior.
+- [x] Implement Firecrawl account and credential admin API under `/v2/admin/firecrawl/accounts`.
+- [x] Persist account RPM limits and preserve existing proxy routing behavior.
+- [x] Run targeted pytest.
+- [x] Run ruff on changed app/test paths.
+- [x] Run ty on changed app/test paths.
+- [x] Run strict OpenSpec validation.

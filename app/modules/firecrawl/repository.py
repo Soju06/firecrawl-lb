@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.crypto import TokenEncryptor
 from app.db.models import (
@@ -32,6 +33,31 @@ class FirecrawlRepository:
             await self._session.refresh(record, ["credentials"])
             accounts.append(self._to_domain_account(record))
         return accounts
+
+    async def list_account_records(self) -> list[FirecrawlAccountRecord]:
+        result = await self._session.execute(
+            select(FirecrawlAccountRecord)
+            .options(selectinload(FirecrawlAccountRecord.credentials))
+            .order_by(FirecrawlAccountRecord.id)
+        )
+        return list(result.scalars().unique().all())
+
+    async def get_account_record(self, account_id: str) -> FirecrawlAccountRecord | None:
+        result = await self._session.execute(
+            select(FirecrawlAccountRecord)
+            .options(selectinload(FirecrawlAccountRecord.credentials))
+            .where(FirecrawlAccountRecord.id == account_id)
+        )
+        return result.scalars().unique().one_or_none()
+
+    async def get_credential_record(self, credential_id: str) -> FirecrawlCredentialRecord | None:
+        return await self._session.get(FirecrawlCredentialRecord, credential_id)
+
+    def add_account_record(self, account: FirecrawlAccountRecord) -> None:
+        self._session.add(account)
+
+    def add_credential_record(self, credential: FirecrawlCredentialRecord) -> None:
+        self._session.add(credential)
 
     async def record_request(
         self,

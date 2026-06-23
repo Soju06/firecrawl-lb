@@ -39,6 +39,7 @@ def upgrade() -> None:
             sa.Column("monthly_budget_credits", sa.Integer(), nullable=True),
             sa.Column("remaining_credits_live", sa.Integer(), nullable=True),
             sa.Column("plan_credits_live", sa.Integer(), nullable=True),
+            sa.Column("rpm_limit", sa.Integer(), nullable=True),
             sa.Column("billing_period_start", sa.DateTime(), nullable=True),
             sa.Column("billing_period_end", sa.DateTime(), nullable=True),
             sa.Column("queue_active_jobs", sa.Integer(), nullable=True),
