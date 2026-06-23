@@ -39,7 +39,7 @@ def _is_sqlite_memory_url(url: str) -> bool:
 def _postgres_async_connect_args(url: str) -> dict[str, int] | None:
     if not url.startswith("postgresql+asyncpg://"):
         return None
-    if not os.environ.get("CODEX_LB_TEST_DATABASE_URL"):
+    if not os.environ.get("FIRECRAWL_LB_TEST_DATABASE_URL"):
         return None
     return {"prepared_statement_cache_size": 0}
 
@@ -47,7 +47,7 @@ def _postgres_async_connect_args(url: str) -> dict[str, int] | None:
 def _postgres_async_engine_kwargs(url: str, *, background: bool) -> dict[str, object]:
     connect_args = _postgres_async_connect_args(url)
     kwargs: dict[str, object] = {"connect_args": connect_args or {}}
-    if os.environ.get("CODEX_LB_TEST_DATABASE_URL") and url.startswith("postgresql+asyncpg://"):
+    if os.environ.get("FIRECRAWL_LB_TEST_DATABASE_URL") and url.startswith("postgresql+asyncpg://"):
         kwargs["poolclass"] = NullPool
     else:
         kwargs["pool_size"] = _database_pool_size(background=background)

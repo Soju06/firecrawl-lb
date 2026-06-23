@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 _otel_initialized = False
 
 
-def init_tracing(service_name: str = "codex-lb", endpoint: str = "", app: FastAPI | None = None) -> bool:
+def init_tracing(service_name: str = "firecrawl-lb", endpoint: str = "", app: FastAPI | None = None) -> bool:
     global _otel_initialized
 
     if _otel_initialized:
@@ -79,7 +79,7 @@ def init_tracing(service_name: str = "codex-lb", endpoint: str = "", app: FastAP
 
     except ImportError:
         logger.warning(
-            "opentelemetry packages not installed; tracing disabled. Install with: pip install codex-lb[tracing]"
+            "opentelemetry packages not installed; tracing disabled. Install with: pip install firecrawl-lb[tracing]"
         )
         return False
 

@@ -10,18 +10,18 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
-TEST_DB_DIR = Path(tempfile.mkdtemp(prefix="codex-lb-tests-"))
-TEST_DB_PATH = TEST_DB_DIR / "codex-lb.db"
+TEST_DB_DIR = Path(tempfile.mkdtemp(prefix="firecrawl-lb-tests-"))
+TEST_DB_PATH = TEST_DB_DIR / "firecrawl-lb.db"
 
-os.environ["CODEX_LB_DATABASE_URL"] = os.environ.get(
-    "CODEX_LB_TEST_DATABASE_URL", f"sqlite+aiosqlite:///{TEST_DB_PATH}"
+os.environ["FIRECRAWL_LB_DATABASE_URL"] = os.environ.get(
+    "FIRECRAWL_LB_TEST_DATABASE_URL", f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 )
-os.environ["CODEX_LB_UPSTREAM_BASE_URL"] = "https://example.invalid/backend-api"
-os.environ["CODEX_LB_USAGE_REFRESH_ENABLED"] = "false"
-os.environ["CODEX_LB_MODEL_REGISTRY_ENABLED"] = "false"
-os.environ["CODEX_LB_STICKY_SESSION_CLEANUP_ENABLED"] = "false"
-os.environ["CODEX_LB_HTTP_RESPONSES_SESSION_BRIDGE_ENABLED"] = "false"
-os.environ["CODEX_LB_QUOTA_PLANNER_SCHEDULER_ENABLED"] = "false"
+os.environ["FIRECRAWL_LB_UPSTREAM_BASE_URL"] = "https://example.invalid/backend-api"
+os.environ["FIRECRAWL_LB_USAGE_REFRESH_ENABLED"] = "false"
+os.environ["FIRECRAWL_LB_MODEL_REGISTRY_ENABLED"] = "false"
+os.environ["FIRECRAWL_LB_STICKY_SESSION_CLEANUP_ENABLED"] = "false"
+os.environ["FIRECRAWL_LB_HTTP_RESPONSES_SESSION_BRIDGE_ENABLED"] = "false"
+os.environ["FIRECRAWL_LB_QUOTA_PLANNER_SCHEDULER_ENABLED"] = "false"
 
 from app.db.models import Base  # noqa: E402
 from app.db.session import engine  # noqa: E402
@@ -89,7 +89,7 @@ async def async_client(app_instance):
 @pytest.fixture(autouse=True)
 def temp_key_file(monkeypatch):
     key_path = TEST_DB_DIR / f"encryption-{uuid4().hex}.key"
-    monkeypatch.setenv("CODEX_LB_ENCRYPTION_KEY_FILE", str(key_path))
+    monkeypatch.setenv("FIRECRAWL_LB_ENCRYPTION_KEY_FILE", str(key_path))
     from app.core.config.settings import get_settings
 
     get_settings.cache_clear()

@@ -48,6 +48,7 @@ from app.modules.audit import api as audit_api
 from app.modules.conversation_archive import api as conversation_archive_api
 from app.modules.dashboard import api as dashboard_api
 from app.modules.dashboard_auth import api as dashboard_auth_api
+from app.modules.firecrawl import api as firecrawl_api
 from app.modules.firewall import api as firewall_api
 from app.modules.health import api as health_api
 from app.modules.oauth import api as oauth_api
@@ -133,7 +134,7 @@ async def lifespan(app: FastAPI):
     if settings.otel_enabled:
         from app.core.tracing.otel import init_tracing
 
-        init_tracing(service_name="codex-lb", endpoint=settings.otel_exporter_endpoint, app=app)
+        init_tracing(service_name="firecrawl-lb", endpoint=settings.otel_exporter_endpoint, app=app)
     await init_db()
     init_background_db()
     _auto_bootstrap_token = await ensure_auto_bootstrap_token()
@@ -335,7 +336,7 @@ def create_app() -> FastAPI:
         reject_threshold_mb=settings.memory_reject_threshold_mb,
     )
     app = FastAPI(
-        title="codex-lb",
+        title="firecrawl-lb",
         version="0.1.0",
         lifespan=lifespan,
         swagger_ui_parameters={"persistAuthorization": True},
@@ -380,6 +381,7 @@ def create_app() -> FastAPI:
     app.include_router(proxy_api.transcribe_router)
     app.include_router(proxy_api.files_router)
     app.include_router(proxy_api.usage_router)
+    app.include_router(firecrawl_api.router)
     app.include_router(audit_api.router)
     app.include_router(accounts_api.router)
     app.include_router(dashboard_api.router)

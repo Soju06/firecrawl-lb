@@ -6,7 +6,7 @@ services:
     env_file:
       - .env.local
     ports:
-      - "2455:2455"
+      - "2465:2465"
       - "1455:1455"
     command:
       - fastapi
@@ -15,10 +15,10 @@ services:
       - --host
       - 0.0.0.0
       - --port
-      - "2455"
+      - "2465"
       - --reload
     volumes:
-      - codex-lb-data:/var/lib/codex-lb
+      - firecrawl-lb-data:/var/lib/firecrawl-lb
     develop:
       watch:
         - action: sync
@@ -45,7 +45,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      API_PROXY_TARGET: http://server:2455
+      API_PROXY_TARGET: http://server:2465
     develop:
       watch:
         - action: sync
@@ -62,22 +62,22 @@ services:
     image: postgres:16-alpine
     profiles: ["postgres"]
     environment:
-      POSTGRES_USER: codex_lb
-      POSTGRES_PASSWORD: codex_lb
-      POSTGRES_DB: codex_lb
+      POSTGRES_USER: firecrawl_lb
+      POSTGRES_PASSWORD: firecrawl_lb
+      POSTGRES_DB: firecrawl_lb
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U codex_lb -d codex_lb"]
+      test: ["CMD-SHELL", "pg_isready -U firecrawl_lb -d firecrawl_lb"]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
-      - codex-lb-postgres-data:/var/lib/postgresql/data
+      - firecrawl-lb-postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:
-  codex-lb-data:
-    name: codex-lb-data
-  codex-lb-postgres-data:
-    name: codex-lb-postgres-data
+  firecrawl-lb-data:
+    name: firecrawl-lb-data
+  firecrawl-lb-postgres-data:
+    name: firecrawl-lb-postgres-data

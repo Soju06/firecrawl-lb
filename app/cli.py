@@ -21,7 +21,7 @@ class _CliHelpFormatter(argparse.HelpFormatter):
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run the codex-lb API server.",
+        description="Run the firecrawl-lb API server.",
         formatter_class=_CliHelpFormatter,
     )
     subparsers = parser.add_subparsers(dest="command")
@@ -56,7 +56,7 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
 
     parser.add_argument("--host", default=os.getenv("HOST", "127.0.0.1"))
-    parser.add_argument("--port", default=os.getenv("PORT", "2455"))
+    parser.add_argument("--port", default=os.getenv("PORT", "2465"))
     parser.add_argument("--ssl-certfile", default=os.getenv("SSL_CERTFILE"))
     parser.add_argument("--ssl-keyfile", default=os.getenv("SSL_KEYFILE"))
     parser.add_argument(

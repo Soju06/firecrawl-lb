@@ -736,11 +736,11 @@ def wait_for_head(
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Database migration utility for codex-lb.")
+    parser = argparse.ArgumentParser(description="Database migration utility for firecrawl-lb.")
     parser.add_argument(
         "--db-url",
         default=None,
-        help="Database URL to migrate. Defaults to CODEX_LB_DATABASE_URL from settings.",
+        help="Database URL to migrate. Defaults to FIRECRAWL_LB_DATABASE_URL from settings.",
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
