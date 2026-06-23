@@ -36,13 +36,13 @@ def _build_echo_app(*, touch_headers: bool = False) -> FastAPI:
         data = await request.json()
         return {"content_encoding": request.headers.get("content-encoding"), "data": data}
 
-    @app.post("/backend-api/codex/responses")
-    async def responses(request: Request):
+    @app.post("/v2/scrape")
+    async def scrape(request: Request):
         data = await request.json()
         return {"content_encoding": request.headers.get("content-encoding"), "data": data}
 
-    @app.post("/backend-api/codex/responses/")
-    async def responses_slash(request: Request):
+    @app.post("/v2/scrape/")
+    async def scrape_slash(request: Request):
         data = await request.json()
         return {"content_encoding": request.headers.get("content-encoding"), "data": data}
 
@@ -183,8 +183,8 @@ async def test_request_decompression_rejects_unsupported_encoding():
 
 @pytest.mark.asyncio
 async def test_request_decompression_allows_larger_responses_payload(monkeypatch):
-    monkeypatch.setenv("CODEX_LB_MAX_DECOMPRESSED_BODY_BYTES", "128")
-    monkeypatch.setenv("CODEX_LB_MAX_DECOMPRESSED_RESPONSES_BODY_BYTES", "2048")
+    monkeypatch.setenv("FIRECRAWL_LB_MAX_DECOMPRESSED_BODY_BYTES", "128")
+    monkeypatch.setenv("FIRECRAWL_LB_MAX_DECOMPRESSED_RESPONSES_BODY_BYTES", "2048")
 
     app = _build_echo_app()
 
@@ -195,7 +195,7 @@ async def test_request_decompression_allows_larger_responses_payload(monkeypatch
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         resp = await client.post(
-            "/backend-api/codex/responses",
+            "/v2/scrape",
             content=compressed,
             headers={"Content-Encoding": "zstd", "Content-Type": "application/json"},
         )
@@ -208,8 +208,8 @@ async def test_request_decompression_allows_larger_responses_payload(monkeypatch
 
 @pytest.mark.asyncio
 async def test_request_decompression_allows_larger_trailing_slash_responses_payload(monkeypatch):
-    monkeypatch.setenv("CODEX_LB_MAX_DECOMPRESSED_BODY_BYTES", "128")
-    monkeypatch.setenv("CODEX_LB_MAX_DECOMPRESSED_RESPONSES_BODY_BYTES", "2048")
+    monkeypatch.setenv("FIRECRAWL_LB_MAX_DECOMPRESSED_BODY_BYTES", "128")
+    monkeypatch.setenv("FIRECRAWL_LB_MAX_DECOMPRESSED_RESPONSES_BODY_BYTES", "2048")
 
     app = _build_echo_app()
 
@@ -220,7 +220,7 @@ async def test_request_decompression_allows_larger_trailing_slash_responses_payl
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         resp = await client.post(
-            "/backend-api/codex/responses/",
+            "/v2/scrape/",
             content=compressed,
             headers={"Content-Encoding": "zstd", "Content-Type": "application/json"},
         )
@@ -233,8 +233,8 @@ async def test_request_decompression_allows_larger_trailing_slash_responses_payl
 
 @pytest.mark.asyncio
 async def test_request_decompression_keeps_default_limit_for_other_routes(monkeypatch):
-    monkeypatch.setenv("CODEX_LB_MAX_DECOMPRESSED_BODY_BYTES", "128")
-    monkeypatch.setenv("CODEX_LB_MAX_DECOMPRESSED_RESPONSES_BODY_BYTES", "2048")
+    monkeypatch.setenv("FIRECRAWL_LB_MAX_DECOMPRESSED_BODY_BYTES", "128")
+    monkeypatch.setenv("FIRECRAWL_LB_MAX_DECOMPRESSED_RESPONSES_BODY_BYTES", "2048")
 
     app = _build_echo_app()
 

@@ -51,4 +51,3 @@ class FirecrawlSelectedAccount:
     account: FirecrawlAccount
     credential: FirecrawlCredential
     estimated_credits: int
-

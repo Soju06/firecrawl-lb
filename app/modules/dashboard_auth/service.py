@@ -16,7 +16,7 @@ from app.core.crypto import TokenEncryptor
 from app.core.rate_limiter.db_rate_limiter import DatabaseRateLimiter
 from app.modules.dashboard_auth.schemas import DashboardAuthSessionResponse, TotpSetupStartResponse
 
-DASHBOARD_SESSION_COOKIE = "codex_lb_dashboard_session"
+DASHBOARD_SESSION_COOKIE = "firecrawl_lb_dashboard_session"
 _TOTP_ISSUER = "firecrawl-lb"
 _TOTP_ACCOUNT = "dashboard"
 

@@ -5,7 +5,7 @@ provided no real relief on hot paths and effectively forced a DB session per
 proxy request to re-check the firewall allowlist. The hotfix raises the
 default to 30 seconds and makes the value operator-configurable via
 ``firewall_ip_cache_ttl_seconds`` (env
-``CODEX_LB_FIREWALL_IP_CACHE_TTL_SECONDS``).
+``FIRECRAWL_LB_FIREWALL_IP_CACHE_TTL_SECONDS``).
 """
 
 from __future__ import annotations

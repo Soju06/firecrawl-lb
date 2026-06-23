@@ -38,10 +38,10 @@
 - [x] Add RED tests for team credit/queue refresh persistence.
 - [x] Add RED tests for Firecrawl admin auth dependency override and public proxy openness.
 - [x] Add RED tests for `/v2/crawl` and `/v2/batch/scrape` submit/status/cancel ownership and one-time settlement.
-- [x] Add RED tests that old OpenAI/OAuth runtime routes are absent.
+- [x] Add RED tests that old legacy auth runtime routes are absent.
 - [x] Implement refresh client/service/scheduler wiring without real network calls in tests.
 - [x] Implement job proxy routes and original-account settlement.
-- [x] Remove old OpenAI/OAuth/WebSocket routers from app wiring while keeping shared app infrastructure bootable.
+- [x] Remove old legacy auth/WebSocket routers from app wiring while keeping shared app infrastructure bootable.
 - [x] Rewrite README for firecrawl-lb operation.
 - [x] Run targeted pytest.
 - [x] Run ruff on changed app/test paths.
@@ -57,12 +57,12 @@
 - [x] Run frontend typecheck and build.
 - [x] Run targeted backend pytest, ruff, ty, and OpenSpec validation.
 
-## 8. Codex/OpenAI residue cleanup
+## 8. legacy proxy residue cleanup
 
-- [x] Delete old backend Codex/OpenAI/OAuth/API-key/dashboard/usage/request-log/quota/sticky-session/conversation/limit-warmup modules.
+- [x] Delete old backend legacy proxy/auth/account/quota/session modules.
 - [x] Remove deleted backend router, scheduler, cache, bridge, ring-membership, and usage-registry wiring from `app/main.py`.
 - [x] Delete old backend tests that import deleted modules while keeping Firecrawl tests.
-- [x] Delete old frontend Codex dashboard/accounts/API/firewall/sticky/quota/conversation feature areas and integration tests.
+- [x] Delete old frontend legacy dashboard/account/quota/session feature areas and integration tests.
 - [x] Trim frontend mocks, auth branding, shared status/runtime/settings references, and old hook/component imports.
 - [x] Run backend and frontend verification for the cleanup slice.
 
@@ -71,6 +71,6 @@
 - [x] Rename Docker, Compose, Helm, release, and GitHub automation artifacts to firecrawl-lb identity.
 - [x] Move the Helm chart to `deploy/helm/firecrawl-lb` and update chart helpers, labels, dashboard metadata, and release-managed paths.
 - [x] Replace deployment env vars with `FIRECRAWL_LB_*`, port `2465`, and `/var/lib/firecrawl-lb` runtime paths.
-- [x] Remove Codex/OpenAI/OAuth/session-bridge deployment values and examples from active deployment artifacts.
+- [x] Remove legacy proxy/auth/session deployment values and examples from active deployment artifacts.
 - [x] Preserve generic database, migration, metrics, tracing, ingress, service, HPA, PDB, NetworkPolicy, and release workflows.
 - [x] Record deployment verification at `/tmp/firecrawl-deploy-system-verification.md`.

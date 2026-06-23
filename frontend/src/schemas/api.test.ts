@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ApiErrorResponseSchema,
   DashboardApiErrorSchema,
-  OpenAIApiErrorSchema,
+  ApiErrorSchema,
 } from "@/schemas/api";
 
 describe("DashboardApiErrorSchema", () => {
@@ -28,9 +28,9 @@ describe("DashboardApiErrorSchema", () => {
   });
 });
 
-describe("OpenAIApiErrorSchema", () => {
+describe("ApiErrorSchema", () => {
   it("accepts optional fields", () => {
-    const parsed = OpenAIApiErrorSchema.parse({
+    const parsed = ApiErrorSchema.parse({
       error: {
         message: "invalid request",
         type: "invalid_request_error",
@@ -43,7 +43,7 @@ describe("OpenAIApiErrorSchema", () => {
 });
 
 describe("ApiErrorResponseSchema", () => {
-  it("accepts dashboard and openai shapes", () => {
+  it("accepts dashboard and api shapes", () => {
     expect(
       ApiErrorResponseSchema.safeParse({
         error: { code: "timeout", message: "request timeout" },

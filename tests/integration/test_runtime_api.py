@@ -18,7 +18,7 @@ class _RuntimeVersionServiceStub:
             update_available=True,
             checked_at=datetime(2026, 5, 26, 0, 0, 0),
             source="github",
-            release_url="https://github.com/Soju06/codex-lb/releases/latest",
+            release_url="https://github.com/Soju06/firecrawl-lb/releases/latest",
         )
 
 
@@ -37,7 +37,7 @@ async def test_runtime_version_endpoint_returns_camel_case_contract(async_client
         "updateAvailable": True,
         "checkedAt": "2026-05-26T00:00:00Z",
         "source": "github",
-        "releaseUrl": "https://github.com/Soju06/codex-lb/releases/latest",
+        "releaseUrl": "https://github.com/Soju06/firecrawl-lb/releases/latest",
     }
 
 

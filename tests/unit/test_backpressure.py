@@ -53,7 +53,7 @@ async def test_backpressure_returns_429_when_at_capacity():
         first_response = await first_request
 
     assert overloaded.status_code == 429
-    assert overloaded.json() == {"detail": "codex-lb is temporarily overloaded by local backpressure"}
+    assert overloaded.json() == {"detail": "firecrawl-lb is temporarily overloaded by local backpressure"}
     assert overloaded.headers["retry-after"] == "5"
     assert first_response.status_code == 200
 
@@ -114,7 +114,7 @@ async def test_backpressure_websocket_rejects_with_http_response_when_at_capacit
 
     try:
         await middleware(
-            {"type": "websocket", "path": "/v1/responses"},
+            {"type": "websocket", "path": "/v2/scrape"},
             cast(Any, receive),
             cast(Any, send),
         )
@@ -164,4 +164,4 @@ async def test_backpressure_dashboard_websocket_uses_detail_payload_when_at_capa
 
     assert app_called is False
     payload = json.loads(cast(bytes, sent_events[1]["body"]).decode("utf-8"))
-    assert payload == {"detail": "codex-lb is temporarily overloaded by local backpressure"}
+    assert payload == {"detail": "firecrawl-lb is temporarily overloaded by local backpressure"}

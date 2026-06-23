@@ -138,7 +138,7 @@ async def test_in_flight_middleware_skips_websocket_connections() -> None:
 
     middleware = InFlightMiddleware(inner_app)
 
-    scope = {"type": "websocket", "path": "/v1/responses"}
+    scope = {"type": "websocket", "path": "/v2/scrape"}
 
     async def ws_receive():  # noqa: ANN202
         return {"type": "websocket.connect"}
@@ -175,7 +175,7 @@ async def test_in_flight_middleware_skips_lifespan() -> None:
 
 
 @pytest.mark.asyncio
-async def test_in_flight_middleware_allows_internal_bridge_handoff_during_drain() -> None:
+async def test_in_flight_middleware_allows_internal_drain_during_drain() -> None:
     shutdown_state.set_draining(True)
     app_called = False
 

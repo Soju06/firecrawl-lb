@@ -55,13 +55,10 @@ async def test_health_endpoint_ok(async_client):
 
 
 @pytest.mark.asyncio
-async def test_api_validation_error_returns_dashboard_payload(async_client):
+async def test_removed_dashboard_usage_endpoint_returns_dashboard_404(async_client):
     response = await async_client.get("/api/usage/history?hours=0")
-    assert response.status_code == 422
-    payload = response.json()
-    assert payload["error"]["code"] == "validation_error"
-    assert payload["error"]["message"] == "Invalid request payload"
-    assert response.headers["X-App-Version"] == __version__
+    assert response.status_code == 404
+    assert response.json() == {"error": {"code": "http_404", "message": "Not Found"}}
 
 
 @pytest.mark.asyncio

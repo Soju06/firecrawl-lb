@@ -21,8 +21,6 @@ def test_settings_prefers_firecrawl_lb_env_prefix(monkeypatch, tmp_path: Path) -
     database_url = f"sqlite+aiosqlite:///{tmp_path / 'firecrawl.db'}"
     monkeypatch.setenv("FIRECRAWL_LB_DATABASE_URL", database_url)
     monkeypatch.setenv("FIRECRAWL_LB_DATA_DIR", str(tmp_path / "data"))
-    monkeypatch.delenv("CODEX_LB_DATABASE_URL", raising=False)
-    monkeypatch.delenv("CODEX_LB_DATA_DIR", raising=False)
 
     from app.core.config.settings import Settings, get_settings
 

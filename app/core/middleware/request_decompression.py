@@ -14,12 +14,7 @@ from starlette.requests import ClientDisconnect
 from app.core.config.settings import get_settings
 from app.core.errors import dashboard_error
 
-_RESPONSES_DECOMPRESSION_PATHS = frozenset(
-    {
-        "/backend-api/codex/responses",
-        "/v1/responses",
-    }
-)
+_FIRECRAWL_DECOMPRESSION_PATH_PREFIXES = ("/v2/",)
 
 
 class _DecompressedBodyTooLarge(Exception):
@@ -123,7 +118,8 @@ def _replace_request_body(request: Request, body: bytes) -> None:
 
 def _max_decompressed_body_bytes_for_request(request: Request) -> int:
     settings = get_settings()
-    if request.url.path.rstrip("/") in _RESPONSES_DECOMPRESSION_PATHS:
+    path = request.url.path.rstrip("/")
+    if path.startswith(_FIRECRAWL_DECOMPRESSION_PATH_PREFIXES):
         return max(settings.max_decompressed_body_bytes, settings.max_decompressed_responses_body_bytes)
     return settings.max_decompressed_body_bytes
 

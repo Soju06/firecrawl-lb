@@ -120,15 +120,9 @@ def test_prometheus_metrics_defined_when_dependency_available(monkeypatch: pytes
 
     assert prometheus_module.PROMETHEUS_AVAILABLE is True
     assert prometheus_module.REGISTRY is not None
-    assert prometheus_module.requests_total.name == "codex_lb_requests_total"
-    assert prometheus_module.request_duration_seconds.name == "codex_lb_request_duration_seconds"
-    assert prometheus_module.active_connections.name == "codex_lb_active_connections"
-    assert prometheus_module.bridge_instance_mismatch_total.name == "codex_lb_bridge_instance_mismatch_total"
-    assert prometheus_module.bridge_instance_mismatch_total.labelnames == ("outcome",)
-    assert prometheus_module.continuity_owner_resolution_total.name == "codex_lb_continuity_owner_resolution_total"
-    assert prometheus_module.continuity_owner_resolution_total.labelnames == ("surface", "source", "outcome")
-    assert prometheus_module.continuity_fail_closed_total.name == "codex_lb_continuity_fail_closed_total"
-    assert prometheus_module.continuity_fail_closed_total.labelnames == ("surface", "reason")
+    assert prometheus_module.requests_total.name == "firecrawl_lb_requests_total"
+    assert prometheus_module.request_duration_seconds.name == "firecrawl_lb_request_duration_seconds"
+    assert prometheus_module.active_connections.name == "firecrawl_lb_active_connections"
 
 
 @pytest.mark.asyncio
@@ -141,19 +135,19 @@ async def test_metrics_middleware_records_request_metrics(monkeypatch: pytest.Mo
     app = FastAPI()
     app.add_middleware(middleware_module.MetricsMiddleware, enabled=True)
 
-    @app.get("/v1/chat/completions/123")
+    @app.get("/v2/scrape/123")
     async def tracked_route() -> dict[str, str]:
         return {"status": "ok"}
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-        response = await client.get("/v1/chat/completions/123")
+        response = await client.get("/v2/scrape/123")
 
     assert response.status_code == 200
     request_sample = prometheus_module.requests_total.samples[
-        (("method", "GET"), ("path", "/v1/..."), ("status", "200"))
+        (("method", "GET"), ("path", "/v2/..."), ("status", "200"))
     ]
-    duration_sample = prometheus_module.request_duration_seconds.samples[(("method", "GET"), ("path", "/v1/..."))]
+    duration_sample = prometheus_module.request_duration_seconds.samples[(("method", "GET"), ("path", "/v2/..."))]
     assert request_sample.value == 1.0
     assert len(duration_sample.observations) == 1
     assert prometheus_module.active_connections.root.value == 0.0
@@ -178,27 +172,3 @@ async def test_metrics_middleware_noops_without_prometheus_client(monkeypatch: p
     assert response.json() == {"status": "ok"}
     assert prometheus_module.PROMETHEUS_AVAILABLE is False
     assert prometheus_module.requests_total is None
-
-
-def test_bridge_instance_mismatch_counter_increments(monkeypatch: pytest.MonkeyPatch) -> None:
-    prometheus_module, _ = _load_metrics_modules(monkeypatch, prometheus_client_module=_fake_prometheus_client_module())
-
-    assert prometheus_module.PROMETHEUS_AVAILABLE is True
-    counter = prometheus_module.bridge_instance_mismatch_total
-    assert counter is not None
-
-    fallback_sample = counter.labels(outcome="fallback")
-    assert fallback_sample.value == 0.0
-
-    fallback_sample.inc()
-    assert fallback_sample.value == 1.0
-
-    fallback_sample.inc()
-    assert fallback_sample.value == 2.0
-
-
-def test_bridge_instance_mismatch_counter_noop_without_prometheus(monkeypatch: pytest.MonkeyPatch) -> None:
-    prometheus_module, _ = _load_metrics_modules(monkeypatch, prometheus_client_module=None)
-
-    assert prometheus_module.PROMETHEUS_AVAILABLE is False
-    assert prometheus_module.bridge_instance_mismatch_total is None

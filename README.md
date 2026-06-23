@@ -2,7 +2,7 @@
 
 Firecrawl account load balancer and persistence proxy.
 
-`firecrawl-lb` fronts selected Firecrawl `/v2` APIs, routes requests across configured Firecrawl team credentials, records request/job state locally, and keeps live account usage fields refreshed for operators. It is a cutover from the older `codex-lb` scaffold; active OpenAI/Codex/OAuth/WebSocket proxy routes are no longer mounted.
+`firecrawl-lb` fronts selected Firecrawl `/v2` APIs, routes requests across configured Firecrawl team credentials, records request/job state locally, and keeps live account usage fields refreshed for operators.
 
 ## What It Proxies
 
@@ -114,7 +114,6 @@ The scheduler shell is disabled by default in this cutover slice. The one-pass r
 ## Limitations
 
 - This slice focuses runtime Firecrawl proxy/admin behavior and top-level docs.
-- Historical OpenSpec archives and inactive OpenAI/Codex modules may still exist in the repository but are not mounted by the app factory.
 - No tests make real Firecrawl network calls; upstream behavior is exercised with fake clients.
 - Dashboard/frontend cleanup is outside this MVP slice unless needed for backend bootability.
 

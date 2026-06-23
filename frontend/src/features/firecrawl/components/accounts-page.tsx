@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AccountCard, AccountStatusBadge, creditPercent } from "@/features/firecrawl/components/account-card";
+import { creditPercent } from "@/features/firecrawl/account-utils";
+import { AccountCard, AccountStatusBadge } from "@/features/firecrawl/components/account-card";
 import { AccountCreateDialog } from "@/features/firecrawl/components/account-create-dialog";
 import { AccountDetailPanel } from "@/features/firecrawl/components/account-detail-panel";
 import { useFirecrawlAccounts } from "@/features/firecrawl/hooks/use-accounts";
@@ -22,7 +23,7 @@ export function FirecrawlAccountsPage() {
     updateCredentialMutation,
   } = useFirecrawlAccounts();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const accounts = accountsQuery.data ?? [];
+  const accounts = useMemo(() => accountsQuery.data ?? [], [accountsQuery.data]);
   const selectedAccount = useMemo(
     () => accounts.find((account) => account.id === selectedId) ?? null,
     [accounts, selectedId],

@@ -2,7 +2,7 @@
 
 ## Why
 
-The Firecrawl cutover needs the runtime identity to move from codex-lb to firecrawl-lb while the old Codex modules remain bootable, and it needs an MVP persistence/proxy path for Firecrawl requests.
+The Firecrawl cutover needs the runtime identity to move from the source scaffold to firecrawl-lb and an MVP persistence/proxy path for Firecrawl requests.
 
 ## What Changes
 
@@ -14,5 +14,5 @@ The Firecrawl cutover needs the runtime identity to move from codex-lb to firecr
 ## Impact
 
 - Adds Firecrawl-specific DB tables and proxy routes.
-- Keeps existing Codex/OpenAI modules present for boot compatibility.
+- Keeps existing legacy modules removed after Firecrawl cutover.
 - Tests use fake upstream clients and do not require real Firecrawl credentials.

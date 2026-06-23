@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 
 from app.core.config.settings import get_settings
-from app.core.errors import openai_error
+from app.core.errors import api_error
 from app.core.middleware.firewall_cache import get_firewall_ip_cache
 from app.db.session import get_background_session
 from app.modules.firewall.repository import FirewallRepository
@@ -52,14 +52,12 @@ def add_api_firewall_middleware(app: FastAPI) -> None:
 
         return JSONResponse(
             status_code=403,
-            content=openai_error("ip_forbidden", "Access denied for client IP", error_type="access_error"),
+            content=api_error("ip_forbidden", "Access denied for client IP", error_type="access_error"),
         )
 
 
 def _is_protected_api_path(path: str) -> bool:
-    if path == "/backend-api/codex" or path.startswith("/backend-api/codex/"):
-        return True
-    return path == "/v1" or path.startswith("/v1/")
+    return path == "/v2" or path.startswith("/v2/")
 
 
 def _resolve_client_ip(

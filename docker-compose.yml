@@ -4,7 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - .env.local
+      - path: .env.local
+        required: false
     ports:
       - "2465:2465"
     command:

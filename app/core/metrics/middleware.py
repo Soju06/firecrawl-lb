@@ -13,8 +13,8 @@ from app.core.metrics.prometheus import (
 
 
 def _normalize_path(path: str) -> str:
-    if path.startswith("/v1/"):
-        return "/v1/..."
+    if path.startswith("/v2/"):
+        return "/v2/..."
     if path.startswith("/api/"):
         return "/api/..."
     if path.startswith("/health/"):

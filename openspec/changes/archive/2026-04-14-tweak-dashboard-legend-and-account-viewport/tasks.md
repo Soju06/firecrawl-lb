@@ -1,3 +1,0 @@
-- [x] 1. Update the dashboard donut legend viewport to allow five visible rows.
-- [x] 2. Make the dashboard account cards grid scrollable with hidden scrollbars and a two-row viewport.
-- [x] 3. Add or update frontend tests for the new dashboard density limits.

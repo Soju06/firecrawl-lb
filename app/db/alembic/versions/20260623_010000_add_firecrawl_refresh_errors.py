@@ -1,7 +1,7 @@
 """add firecrawl refresh error fields
 
-Revision ID: 20260623_010000_add_firecrawl_refresh_errors
-Revises: 20260623_000000_add_firecrawl_persistence
+Revision ID: 20260623_firecrawl_refresh
+Revises: 20260623_firecrawl_base
 Create Date: 2026-06-23
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.engine import Connection
 
-revision = "20260623_010000_add_firecrawl_refresh_errors"
-down_revision = "20260623_000000_add_firecrawl_persistence"
+revision = "20260623_firecrawl_refresh"
+down_revision = "20260623_firecrawl_base"
 branch_labels = None
 depends_on = None
 

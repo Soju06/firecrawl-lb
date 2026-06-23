@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from app.core.config.settings import (
-    DEFAULT_CONVERSATION_ARCHIVE_DIR,
     DEFAULT_DATABASE_URL,
     DEFAULT_ENCRYPTION_KEY_FILE,
     DOCKER_DATA_DIR,
@@ -23,10 +22,10 @@ def _settings_from_env_file(env_file: Path) -> Settings:
     ("env_dir", "home_exists", "in_container", "expected"),
     [
         ("/tmp/custom", False, False, Path("/tmp/custom")),
-        (None, True, False, Path("/home/user") / ".codex-lb"),
-        (None, True, True, Path("/home/user") / ".codex-lb"),
+        (None, True, False, Path("/home/user") / ".firecrawl-lb"),
+        (None, True, True, Path("/home/user") / ".firecrawl-lb"),
         (None, False, True, DOCKER_DATA_DIR),
-        (None, False, False, Path("/home/user") / ".codex-lb"),
+        (None, False, False, Path("/home/user") / ".firecrawl-lb"),
     ],
 )
 def test_default_home_dir_precedence(
@@ -45,34 +44,31 @@ def test_default_home_dir_precedence(
 
 
 def test_data_dir_from_env_file_updates_related_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CODEX_LB_DATA_DIR", raising=False)
-    monkeypatch.delenv("CODEX_LB_DATABASE_URL", raising=False)
-    monkeypatch.delenv("CODEX_LB_ENCRYPTION_KEY_FILE", raising=False)
-    monkeypatch.delenv("CODEX_LB_CONVERSATION_ARCHIVE_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATA_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATABASE_URL", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_ENCRYPTION_KEY_FILE", raising=False)
     data_dir = tmp_path / "configured"
     env_file = tmp_path / ".env"
-    env_file.write_text(f"CODEX_LB_DATA_DIR={data_dir}\n", encoding="utf-8")
+    env_file.write_text(f"FIRECRAWL_LB_DATA_DIR={data_dir}\n", encoding="utf-8")
 
     settings = _settings_from_env_file(env_file)
 
     assert settings.data_dir == data_dir
     assert settings.database_url == f"sqlite+aiosqlite:///{data_dir / 'store.db'}"
     assert settings.encryption_key_file == data_dir / "encryption.key"
-    assert settings.conversation_archive_dir == data_dir / "conversation-archive"
 
 
 def test_blank_data_dir_from_env_file_uses_default_home_dir(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("CODEX_LB_DATA_DIR", raising=False)
-    monkeypatch.delenv("CODEX_LB_DATABASE_URL", raising=False)
-    monkeypatch.delenv("CODEX_LB_ENCRYPTION_KEY_FILE", raising=False)
-    monkeypatch.delenv("CODEX_LB_CONVERSATION_ARCHIVE_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATA_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATABASE_URL", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_ENCRYPTION_KEY_FILE", raising=False)
     env_file = tmp_path / ".env"
-    env_file.write_text("CODEX_LB_DATA_DIR=   \n", encoding="utf-8")
+    env_file.write_text("FIRECRAWL_LB_DATA_DIR=   \n", encoding="utf-8")
 
-    expected_data_dir = Path("/home/user") / ".codex-lb"
+    expected_data_dir = Path("/home/user") / ".firecrawl-lb"
     with (
         patch("app.core.config.settings.Path.home", return_value=Path("/home/user")),
         patch("app.core.config.settings._in_container", return_value=False),
@@ -83,13 +79,12 @@ def test_blank_data_dir_from_env_file_uses_default_home_dir(
     assert settings.data_dir == expected_data_dir
     assert settings.database_url == f"sqlite+aiosqlite:///{expected_data_dir / 'store.db'}"
     assert settings.encryption_key_file == expected_data_dir / "encryption.key"
-    assert settings.conversation_archive_dir == expected_data_dir / "conversation-archive"
 
 
 def test_blank_data_dir_from_process_env_uses_default_home_dir(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CODEX_LB_DATA_DIR", "   ")
+    monkeypatch.setenv("FIRECRAWL_LB_DATA_DIR", "   ")
 
-    expected_data_dir = Path("/home/user") / ".codex-lb"
+    expected_data_dir = Path("/home/user") / ".firecrawl-lb"
     with (
         patch("app.core.config.settings.Path.home", return_value=Path("/home/user")),
         patch("app.core.config.settings._in_container", return_value=False),
@@ -99,21 +94,18 @@ def test_blank_data_dir_from_process_env_uses_default_home_dir(monkeypatch: pyte
 
 
 def test_data_dir_keeps_explicit_related_overrides(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CODEX_LB_DATA_DIR", raising=False)
-    monkeypatch.delenv("CODEX_LB_DATABASE_URL", raising=False)
-    monkeypatch.delenv("CODEX_LB_ENCRYPTION_KEY_FILE", raising=False)
-    monkeypatch.delenv("CODEX_LB_CONVERSATION_ARCHIVE_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATA_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATABASE_URL", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_ENCRYPTION_KEY_FILE", raising=False)
     data_dir = tmp_path / "configured"
-    archive_dir = tmp_path / "archive"
     key_file = tmp_path / "key"
     env_file = tmp_path / ".env"
     env_file.write_text(
         "\n".join(
             [
-                f"CODEX_LB_DATA_DIR={data_dir}",
-                "CODEX_LB_DATABASE_URL=sqlite+aiosqlite:///explicit.db",
-                f"CODEX_LB_ENCRYPTION_KEY_FILE={key_file}",
-                f"CODEX_LB_CONVERSATION_ARCHIVE_DIR={archive_dir}",
+                f"FIRECRAWL_LB_DATA_DIR={data_dir}",
+                "FIRECRAWL_LB_DATABASE_URL=sqlite+aiosqlite:///explicit.db",
+                f"FIRECRAWL_LB_ENCRYPTION_KEY_FILE={key_file}",
             ]
         ),
         encoding="utf-8",
@@ -124,26 +116,23 @@ def test_data_dir_keeps_explicit_related_overrides(tmp_path: Path, monkeypatch: 
     assert settings.data_dir == data_dir
     assert settings.database_url == "sqlite+aiosqlite:///explicit.db"
     assert settings.encryption_key_file == key_file
-    assert settings.conversation_archive_dir == archive_dir
 
 
 def test_data_dir_keeps_explicit_related_overrides_that_equal_old_defaults(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("CODEX_LB_DATA_DIR", raising=False)
-    monkeypatch.delenv("CODEX_LB_DATABASE_URL", raising=False)
-    monkeypatch.delenv("CODEX_LB_ENCRYPTION_KEY_FILE", raising=False)
-    monkeypatch.delenv("CODEX_LB_CONVERSATION_ARCHIVE_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATA_DIR", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_DATABASE_URL", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_ENCRYPTION_KEY_FILE", raising=False)
     data_dir = tmp_path / "configured"
     env_file = tmp_path / ".env"
     env_file.write_text(
         "\n".join(
             [
-                f"CODEX_LB_DATA_DIR={data_dir}",
-                f"CODEX_LB_DATABASE_URL={DEFAULT_DATABASE_URL}",
-                f"CODEX_LB_ENCRYPTION_KEY_FILE={DEFAULT_ENCRYPTION_KEY_FILE}",
-                f"CODEX_LB_CONVERSATION_ARCHIVE_DIR={DEFAULT_CONVERSATION_ARCHIVE_DIR}",
+                f"FIRECRAWL_LB_DATA_DIR={data_dir}",
+                f"FIRECRAWL_LB_DATABASE_URL={DEFAULT_DATABASE_URL}",
+                f"FIRECRAWL_LB_ENCRYPTION_KEY_FILE={DEFAULT_ENCRYPTION_KEY_FILE}",
             ]
         ),
         encoding="utf-8",
@@ -154,4 +143,3 @@ def test_data_dir_keeps_explicit_related_overrides_that_equal_old_defaults(
     assert settings.data_dir == data_dir
     assert settings.database_url == DEFAULT_DATABASE_URL
     assert settings.encryption_key_file == DEFAULT_ENCRYPTION_KEY_FILE
-    assert settings.conversation_archive_dir == DEFAULT_CONVERSATION_ARCHIVE_DIR

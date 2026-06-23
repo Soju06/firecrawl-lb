@@ -9,22 +9,22 @@ export const DashboardApiErrorSchema = z.object({
   error: DashboardApiErrorDetailSchema,
 });
 
-export const OpenAIApiErrorDetailSchema = z.object({
+export const ApiErrorDetailSchema = z.object({
   message: z.string().optional(),
   type: z.string().optional(),
   code: z.string().optional(),
   param: z.string().optional(),
 });
 
-export const OpenAIApiErrorSchema = z.object({
-  error: OpenAIApiErrorDetailSchema,
+export const ApiErrorSchema = z.object({
+  error: ApiErrorDetailSchema,
 });
 
 export const ApiErrorResponseSchema = z.union([
   DashboardApiErrorSchema,
-  OpenAIApiErrorSchema,
+  ApiErrorSchema,
 ]);
 
 export type DashboardApiError = z.infer<typeof DashboardApiErrorSchema>;
-export type OpenAIApiError = z.infer<typeof OpenAIApiErrorSchema>;
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 export type ApiErrorResponse = z.infer<typeof ApiErrorResponseSchema>;

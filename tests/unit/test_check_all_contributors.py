@@ -34,7 +34,7 @@ def test_pull_request_commit_authors_include_normal_email_contributors(tmp_path,
         json.dumps(
             {
                 "pull_request": {
-                    "commits_url": "https://api.github.test/repos/example/codex-lb/pulls/1/commits",
+                    "commits_url": "https://api.github.test/repos/example/firecrawl-lb/pulls/1/commits",
                     "user": {"login": "opener", "type": "User"},
                 }
             }
@@ -63,7 +63,7 @@ def test_pull_request_commit_authors_include_normal_email_contributors(tmp_path,
     monkeypatch.setattr(checker, "_request_json", fake_request_json)
 
     assert checker.pull_request_commit_author_logins(str(event_path), "token") == {"normalauthor"}
-    assert requested_urls == ["https://api.github.test/repos/example/codex-lb/pulls/1/commits?per_page=100"]
+    assert requested_urls == ["https://api.github.test/repos/example/firecrawl-lb/pulls/1/commits?per_page=100"]
 
 
 def test_pull_request_commit_authors_fail_when_github_endpoint_is_capped(tmp_path):
@@ -74,7 +74,7 @@ def test_pull_request_commit_authors_fail_when_github_endpoint_is_capped(tmp_pat
             {
                 "pull_request": {
                     "commits": 251,
-                    "commits_url": "https://api.github.test/repos/example/codex-lb/pulls/1/commits",
+                    "commits_url": "https://api.github.test/repos/example/firecrawl-lb/pulls/1/commits",
                 }
             }
         ),

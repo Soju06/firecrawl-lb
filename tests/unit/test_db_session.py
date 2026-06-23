@@ -56,7 +56,7 @@ class _FakeMigrationRunResult:
 def test_import_session_with_sqlite_memory_url_does_not_error() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     env = os.environ.copy()
-    env["CODEX_LB_DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+    env["FIRECRAWL_LB_DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
     result = subprocess.run(
         [sys.executable, "-c", "import sys; import app.db.session; assert 'app.db.migrate' not in sys.modules"],
@@ -73,7 +73,7 @@ def test_import_session_with_sqlite_memory_url_does_not_error() -> None:
 def test_import_session_with_postgres_url_does_not_error() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     env = os.environ.copy()
-    env["CODEX_LB_DATABASE_URL"] = "postgresql+asyncpg://codex_lb:codex_lb@127.0.0.1:5432/codex_lb"
+    env["FIRECRAWL_LB_DATABASE_URL"] = "postgresql+asyncpg://firecrawl_lb:firecrawl_lb@127.0.0.1:5432/firecrawl_lb"
 
     result = subprocess.run(
         [sys.executable, "-c", "import app.db.session"],
@@ -185,8 +185,8 @@ def test_postgres_engine_kwargs_enable_pre_ping_and_recycle(monkeypatch) -> None
     after the server idles them out, causing
     ``asyncpg.InterfaceError: connection is closed`` on the first real query.
     """
-    monkeypatch.setenv("CODEX_LB_TEST_DATABASE_URL", "")
-    monkeypatch.delenv("CODEX_LB_TEST_DATABASE_URL", raising=False)
+    monkeypatch.setenv("FIRECRAWL_LB_TEST_DATABASE_URL", "")
+    monkeypatch.delenv("FIRECRAWL_LB_TEST_DATABASE_URL", raising=False)
     monkeypatch.setattr(
         session_module,
         "_settings",
@@ -212,7 +212,7 @@ def test_postgres_engine_kwargs_enable_pre_ping_and_recycle(monkeypatch) -> None
 
 
 def test_postgres_engine_kwargs_honor_custom_recycle(monkeypatch) -> None:
-    monkeypatch.delenv("CODEX_LB_TEST_DATABASE_URL", raising=False)
+    monkeypatch.delenv("FIRECRAWL_LB_TEST_DATABASE_URL", raising=False)
     monkeypatch.setattr(
         session_module,
         "_settings",
@@ -227,11 +227,11 @@ def test_postgres_engine_kwargs_honor_custom_recycle(monkeypatch) -> None:
 
 
 def test_postgres_engine_kwargs_use_nullpool_under_test_db_url(monkeypatch) -> None:
-    """The CODEX_LB_TEST_DATABASE_URL escape hatch keeps NullPool semantics —
+    """The FIRECRAWL_LB_TEST_DATABASE_URL escape hatch keeps NullPool semantics —
     pool_pre_ping/recycle are irrelevant when each session opens a fresh
     connection.
     """
-    monkeypatch.setenv("CODEX_LB_TEST_DATABASE_URL", "1")
+    monkeypatch.setenv("FIRECRAWL_LB_TEST_DATABASE_URL", "1")
     monkeypatch.setattr(
         session_module,
         "_settings",
@@ -515,8 +515,8 @@ async def test_init_db_skips_sqlite_check_when_disabled(monkeypatch, tmp_path) -
 async def test_init_db_fails_when_startup_migrations_are_disabled_but_schema_is_behind(monkeypatch) -> None:
     def _inspect_migration_state(_: str) -> _FakeMigrationState:
         return _FakeMigrationState(
-            current_revision="20260330_020000_add_bridge_ring_members",
-            head_revision="20260401_000000_add_cache_invalidation",
+            current_revision="20260623_firecrawl_base",
+            head_revision="20260623_firecrawl_refresh",
             has_alembic_version_table=True,
             has_legacy_migrations_table=False,
             needs_upgrade=True,
@@ -564,7 +564,7 @@ async def test_init_background_db_uses_main_pool_size_for_postgres_by_default() 
     assert session_module._background_session_factory is not None
 
     pool = session_module._background_engine.pool
-    if os.environ.get("CODEX_LB_TEST_DATABASE_URL"):
+    if os.environ.get("FIRECRAWL_LB_TEST_DATABASE_URL"):
         assert isinstance(pool, NullPool)
     else:
         assert cast(Any, pool).size() == 15

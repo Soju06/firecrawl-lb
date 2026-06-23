@@ -15,7 +15,7 @@ class AppError(Exception):
         super().__init__(self.message)
 
 
-# --- OpenAI-envelope errors (proxy routes) ---
+# --- API-envelope errors (proxy routes) ---
 
 
 class ProxyAuthError(AppError):

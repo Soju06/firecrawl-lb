@@ -360,12 +360,6 @@ async def init_db() -> None:
 
     try:
         result = await run_startup_migrations(_settings.database_url)
-        if result.bootstrap.stamped_revision is not None:
-            logger.info(
-                "Bootstrapped legacy migrations stamped_revision=%s legacy_rows=%s",
-                result.bootstrap.stamped_revision,
-                result.bootstrap.legacy_row_count,
-            )
         if result.current_revision is not None:
             logger.info("Database migration complete revision=%s", result.current_revision)
         drift = await to_thread.run_sync(lambda: check_schema_drift(_settings.database_url))

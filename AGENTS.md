@@ -85,7 +85,7 @@ are encouraged but not substitutes for the cloud gates.
 
 ## PR Readiness / Review Trapdoors
 
-These rules encode recurring review blockers observed across codex-lb PRs.
+These rules encode recurring review blockers observed across this repo PRs.
 
 - OpenSpec is a hard gate for behavior, API, schema, CLI,
   dashboard-visible, proxy-routing, operator-contract, and compatibility

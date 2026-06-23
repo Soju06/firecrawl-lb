@@ -9,7 +9,8 @@ services:
   server:
     image: ghcr.io/soju06/firecrawl-lb:latest
     env_file:
-      - .env.local
+      - path: .env.local
+        required: false
     ports:
       - "2465:2465"
     volumes:

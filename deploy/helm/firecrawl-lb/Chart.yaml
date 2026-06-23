@@ -8,6 +8,7 @@ version: 1.20.0-beta.2
 appVersion: 1.20.0-beta.2
 kubeVersion: '>=1.32.0-0'
 home: https://github.com/soju06/firecrawl-lb
+icon: https://raw.githubusercontent.com/Soju06/firecrawl-lb/main/docs/icon.png
 sources:
   - https://github.com/soju06/firecrawl-lb
 keywords:

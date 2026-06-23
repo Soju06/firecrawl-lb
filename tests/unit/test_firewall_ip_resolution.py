@@ -16,7 +16,7 @@ def _make_request(
     scope = {
         "type": "http",
         "method": "GET",
-        "path": "/backend-api/codex/models",
+        "path": "/v2/scrape",
         "headers": headers or [],
         "client": client,
         "query_string": b"",

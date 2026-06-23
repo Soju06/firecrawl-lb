@@ -58,14 +58,14 @@ def test_cleanup_plan_closes_only_superseded_managed_beta_prs() -> None:
         prs,
         current_branch="release/beta-1.20.0-beta.1",
         current_tag="v1.20.0-beta.1",
-        repo="Soju06/codex-lb",
+        repo="Soju06/firecrawl-lb",
         repo_owner="Soju06",
         release_pr="806",
     )
 
     assert [action.pr_number for action in plan] == [807]
     assert plan[0].head_ref == "release/beta-1.19.1-beta.1"
-    assert plan[0].delete_ref_api_path == "repos/Soju06/codex-lb/git/refs/heads/release/beta-1.19.1-beta.1"
+    assert plan[0].delete_ref_api_path == "repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-1.19.1-beta.1"
     assert "v1.20.0-beta.1" in plan[0].comment
     assert "release-please PR #806" in plan[0].comment
 
@@ -87,10 +87,10 @@ def test_execute_cleanup_comments_closes_and_deletes_branch(monkeypatch: pytest.
                 pr_number=807,
                 head_ref="release/beta-1.19.1-beta.1",
                 comment="Superseded by v1.20.0-beta.1",
-                delete_ref_api_path="repos/Soju06/codex-lb/git/refs/heads/release/beta-1.19.1-beta.1",
+                delete_ref_api_path="repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-1.19.1-beta.1",
             )
         ],
-        repo="Soju06/codex-lb",
+        repo="Soju06/firecrawl-lb",
         dry_run=False,
     )
 
@@ -100,16 +100,16 @@ def test_execute_cleanup_comments_closes_and_deletes_branch(monkeypatch: pytest.
             "comment",
             "807",
             "--repo",
-            "Soju06/codex-lb",
+            "Soju06/firecrawl-lb",
             "--body",
             "Superseded by v1.20.0-beta.1",
         ],
-        ["pr", "close", "807", "--repo", "Soju06/codex-lb"],
+        ["pr", "close", "807", "--repo", "Soju06/firecrawl-lb"],
         [
             "api",
             "-X",
             "DELETE",
-            "repos/Soju06/codex-lb/git/refs/heads/release/beta-1.19.1-beta.1",
+            "repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-1.19.1-beta.1",
         ],
     ]
 
@@ -142,7 +142,7 @@ def test_cleanup_script_dry_run_lists_superseded_pr(tmp_path: Path) -> None:
             "-m",
             "scripts.cleanup_superseded_beta_prs",
             "--repo",
-            "Soju06/codex-lb",
+            "Soju06/firecrawl-lb",
             "--repo-owner",
             "Soju06",
             "--current-branch",
@@ -166,5 +166,5 @@ def test_cleanup_script_dry_run_lists_superseded_pr(tmp_path: Path) -> None:
         "pr",
         "list",
         "--repo",
-        "Soju06/codex-lb",
+        "Soju06/firecrawl-lb",
     ]
