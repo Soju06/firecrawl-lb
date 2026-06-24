@@ -114,7 +114,7 @@ release-please from your commit titles.
 
 ## Coding conventions
 
-- **Python**: 3.13+. Code is formatted with `ruff format`, linted with
+- **Python**: 3.14+. Code is formatted with `ruff format`, linted with
   `ruff check`, and type-checked with `ty` (Astral's type checker).
 - **Imports / style**: follow what you see in nearby files; the linter is
   authoritative — if `ruff` and your style guide disagree, ruff wins.

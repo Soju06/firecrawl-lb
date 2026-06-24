@@ -26,19 +26,23 @@ jobs:
       GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
     steps:
-      - name: Require release automation token
+      - name: Skip when release automation token is not configured
+        id: token
         shell: bash
         env:
           RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
         run: |
           set -euo pipefail
           if [ -z "${RELEASE_PLEASE_TOKEN}" ]; then
-            echo "::error::RELEASE_PLEASE_TOKEN is required so beta release events trigger artifact publishing."
-            exit 1
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::RELEASE_PLEASE_TOKEN is not configured; beta release PR sync is a no-op."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout main
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        if: steps.token.outputs.configured == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
           ref: main
@@ -46,6 +50,7 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
       - name: Find open release-please PR
+        if: steps.token.outputs.configured == 'true'
         id: release_pr
         shell: bash
         run: |

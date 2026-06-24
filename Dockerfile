@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM ghcr.io/astral-sh/uv:0.11.19 AS uv-bin
+FROM ghcr.io/astral-sh/uv:0.11.24 AS uv-bin
 
 FROM oven/bun:1.3.14-alpine AS frontend-build
 
@@ -44,7 +44,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip uninstall -y pip setuptools wheel || true \
-    && rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.13 \
+    && rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.14 \
     && rm -rf /usr/local/lib/python*/site-packages/pip* \
         /usr/local/lib/python*/site-packages/setuptools* \
         /usr/local/lib/python*/site-packages/wheel*
