@@ -4,12 +4,8 @@ version = "1.20.0-beta.2"
 description = "Firecrawl load balancer and proxy with usage dashboard"
 readme = "README.md"
 license = { file = "LICENSE" }
-authors = [{ name = "Soju06", email = "qlskssk@gmail.com" }]
-maintainers = [
-    { name = "Soju06", email = "qlskssk@gmail.com" },
-    { name = "choi138", email = "kidjustinchoi@gmail.com" },
-    { name = "aaiyer", email = "aaiyer0@proton.me" },
-]
+authors = [{ name = "Soju06" }]
+maintainers = [{ name = "Soju06" }]
 keywords = [
     "firecrawl",
     "load-balancer",
