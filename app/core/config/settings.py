@@ -6,7 +6,6 @@ from ipaddress import ip_network
 from pathlib import Path
 from typing import Annotated, Literal
 
-from dotenv import dotenv_values
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
@@ -44,14 +43,6 @@ def _configured_http_port() -> int:
         if port > 0:
             return port
     return 2465
-
-
-def _configured_outbound_proxy_env() -> dict[str, str | None]:
-    environ: dict[str, str | None] = {}
-    for env_file in ENV_FILES:
-        environ.update(dotenv_values(env_file))
-    environ.update(os.environ)
-    return environ
 
 
 def _normalize_cidr_list(value: StringListInput, *, field_name: str, invalid_label: str) -> list[str]:
@@ -123,8 +114,6 @@ class Settings(BaseSettings):
     backpressure_max_concurrent_requests: int = 0
     bulkhead_proxy_limit: int = Field(default=512, ge=0)
     bulkhead_proxy_http_limit: int | None = Field(default=None, ge=0)
-    bulkhead_proxy_websocket_limit: int | None = Field(default=None, ge=0)
-    bulkhead_proxy_compact_limit: int | None = Field(default=None, ge=0)
     bulkhead_dashboard_limit: int = Field(default=50, ge=0)
     memory_warning_threshold_mb: int = 0
     memory_reject_threshold_mb: int = 0
@@ -133,10 +122,6 @@ class Settings(BaseSettings):
     http_connector_limit_per_host: int = 50
     max_decompressed_body_bytes: int = Field(default=32 * 1024 * 1024, gt=0)
     max_decompressed_responses_body_bytes: int = Field(default=128 * 1024 * 1024, gt=0)
-    upstream_websocket_trust_env: bool = False
-
-    def upstream_websocket_proxy_env(self) -> dict[str, str | None]:
-        return _configured_outbound_proxy_env()
 
     @field_validator("data_dir", mode="before")
     @classmethod
@@ -198,11 +183,6 @@ class Settings(BaseSettings):
     def _normalize_bulkhead_limits(self) -> "Settings":
         if self.bulkhead_proxy_http_limit is None:
             self.bulkhead_proxy_http_limit = self.bulkhead_proxy_limit
-        if self.bulkhead_proxy_websocket_limit is None:
-            self.bulkhead_proxy_websocket_limit = self.bulkhead_proxy_limit
-        if self.bulkhead_proxy_compact_limit is None:
-            http_limit = self.bulkhead_proxy_http_limit
-            self.bulkhead_proxy_compact_limit = 0 if http_limit <= 0 else min(http_limit, 16)
         return self
 
     @model_validator(mode="after")

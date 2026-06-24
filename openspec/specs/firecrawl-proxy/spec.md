@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define the Firecrawl LB runtime identity, persistence model, administrative APIs, refresh behavior, and Firecrawl v2 proxy surface.
+
+## Requirements
 
 ### Requirement: Firecrawl Runtime Identity
 
@@ -145,6 +149,12 @@ The application SHALL proxy Firecrawl `/v2/scrape`, `/v2/map`, `/v2/search`, `/v
 ### Requirement: Firecrawl Runtime Surface
 
 The application SHALL expose Firecrawl `/v2/*` proxy routes plus health and admin-support routes.
+
+#### Scenario: Runtime excludes legacy upstream surfaces
+
+- **WHEN** the application routes and runtime settings are loaded
+- **THEN** Firecrawl HTTP `/v2/*` proxy routes, health routes, and admin-support routes SHALL be available
+- **AND** legacy upstream WebSocket-specific proxy admission lanes and compact response behavior SHALL NOT be exposed
 
 ### Requirement: Firecrawl Deployment Artifacts
 

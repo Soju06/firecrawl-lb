@@ -31,31 +31,14 @@ class BulkheadSemaphore:
         background_limit: int = 10,
         *,
         proxy_http_limit: int | None = None,
-        proxy_websocket_limit: int | None = None,
-        proxy_compact_limit: int | None = None,
     ) -> None:
         resolved_proxy_limit = 200 if proxy_limit is None else proxy_limit
         resolved_proxy_http_limit = resolved_proxy_limit if proxy_http_limit is None else proxy_http_limit
-        resolved_proxy_websocket_limit = (
-            resolved_proxy_limit if proxy_websocket_limit is None else proxy_websocket_limit
-        )
-        if proxy_compact_limit is None:
-            resolved_proxy_compact_limit = 0 if resolved_proxy_http_limit <= 0 else min(resolved_proxy_http_limit, 16)
-        else:
-            resolved_proxy_compact_limit = proxy_compact_limit
         self._proxy_http = Semaphore(resolved_proxy_http_limit) if resolved_proxy_http_limit > 0 else None
-        self._proxy_websocket = (
-            Semaphore(resolved_proxy_websocket_limit) if resolved_proxy_websocket_limit > 0 else None
-        )
-        self._proxy_compact = Semaphore(resolved_proxy_compact_limit) if resolved_proxy_compact_limit > 0 else None
         self._dashboard = Semaphore(dashboard_limit) if dashboard_limit > 0 else None
         self._background = Semaphore(background_limit) if background_limit > 0 else None
 
     def get_semaphore(self, scope_type: str, path: str) -> tuple[str, Semaphore | None]:
-        if scope_type == "websocket" and is_proxy_path(path):
-            return "proxy_websocket", self._proxy_websocket
-        if scope_type == "http" and _is_compact_path(path):
-            return "proxy_compact", self._proxy_compact
         if scope_type == "http" and is_proxy_path(path):
             return "proxy_http", self._proxy_http
         return "dashboard", self._dashboard
@@ -175,23 +158,15 @@ class BulkheadMiddleware:
 _bulkhead: BulkheadSemaphore | None = None
 
 
-def _is_compact_path(path: str) -> bool:
-    return path.endswith("/responses/compact")
-
-
 def get_bulkhead(
     *,
     proxy_http_limit: int = 200,
-    proxy_websocket_limit: int = 200,
-    proxy_compact_limit: int | None = None,
     dashboard_limit: int = 50,
 ) -> BulkheadSemaphore:
     global _bulkhead
     if _bulkhead is None:
         _bulkhead = BulkheadSemaphore(
             proxy_http_limit=proxy_http_limit,
-            proxy_websocket_limit=proxy_websocket_limit,
-            proxy_compact_limit=proxy_compact_limit,
             dashboard_limit=dashboard_limit,
         )
     return _bulkhead

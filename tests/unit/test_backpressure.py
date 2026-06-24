@@ -114,7 +114,7 @@ async def test_backpressure_websocket_rejects_with_http_response_when_at_capacit
 
     try:
         await middleware(
-            {"type": "websocket", "path": "/v2/scrape"},
+            {"type": "websocket", "path": "/api/status/socket"},
             cast(Any, receive),
             cast(Any, send),
         )
@@ -126,7 +126,7 @@ async def test_backpressure_websocket_rejects_with_http_response_when_at_capacit
     assert sent_events[0]["status"] == 429
     assert sent_events[1]["type"] == "websocket.http.response.body"
     payload = json.loads(cast(bytes, sent_events[1]["body"]).decode("utf-8"))
-    assert payload["error"]["code"] == "proxy_overloaded"
+    assert payload == {"detail": "firecrawl-lb is temporarily overloaded by local backpressure"}
 
 
 @pytest.mark.asyncio

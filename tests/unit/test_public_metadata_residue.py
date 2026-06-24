@@ -15,6 +15,12 @@ LEGACY_BRAND_RE = re.compile(
     r"ghcr\.io/soju06/codex-lb|charts/codex-lb",
     re.IGNORECASE,
 )
+LEGACY_OPERATIONAL_SURFACE_RE = re.compile(
+    r"bulkhead_proxy_websocket_limit|bulkhead_proxy_compact_limit|proxy_websocket|proxy_compact|"
+    r"upstream_websocket_trust_env|upstream_websocket_proxy_env|resolve_websocket_proxy_from_env|"
+    r"responses/compact",
+    re.IGNORECASE,
+)
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 TEXT_FILE_RE = re.compile(
@@ -52,6 +58,8 @@ def _tracked_text_files() -> list[Path]:
     paths: list[Path] = []
     for path in _git_tracked_files():
         rel = path.relative_to(ROOT).as_posix()
+        if not path.exists():
+            continue
         if rel in SKIP_PATHS:
             continue
         if TEXT_FILE_RE.search(rel):
@@ -85,6 +93,20 @@ def test_public_package_metadata_has_only_firecrawl_lb_identity() -> None:
     chart = (ROOT / "deploy" / "helm" / "firecrawl-lb" / "Chart.yaml").read_text(encoding="utf-8")
     assert "maintainers:\n  - name: Soju06\n" in chart
     assert "email:" not in chart
+
+
+def test_tracked_files_do_not_reintroduce_legacy_operational_surfaces() -> None:
+    findings: list[str] = []
+    for path in _tracked_text_files():
+        rel = path.relative_to(ROOT).as_posix()
+        if rel in ALLOW_RESIDUE_PATHS:
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            if LEGACY_OPERATIONAL_SURFACE_RE.search(line):
+                findings.append(f"{rel}:{line_no}: {line.strip()}")
+
+    assert findings == []
 
 
 def test_tracked_public_files_do_not_expose_personal_emails() -> None:

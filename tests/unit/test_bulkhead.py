@@ -17,8 +17,6 @@ pytestmark = pytest.mark.unit
 def _bulkhead(**kwargs: int) -> BulkheadSemaphore:
     return BulkheadSemaphore(
         proxy_http_limit=kwargs.get("proxy_http_limit", 1),
-        proxy_websocket_limit=kwargs.get("proxy_websocket_limit", 1),
-        proxy_compact_limit=kwargs.get("proxy_compact_limit", 1),
         dashboard_limit=kwargs.get("dashboard_limit", 1),
     )
 
@@ -129,10 +127,10 @@ async def test_bulkhead_health_probes_bypass_limits():
 
 
 @pytest.mark.asyncio
-async def test_bulkhead_websocket_denies_with_http_response_when_lane_full():
-    bulkhead = _bulkhead()
-    lane_name, sem = bulkhead.get_semaphore("websocket", "/v2/scrape")
-    assert lane_name == "proxy_websocket"
+async def test_bulkhead_websocket_denies_with_http_response_when_dashboard_lane_full():
+    bulkhead = _bulkhead(dashboard_limit=1)
+    lane_name, sem = bulkhead.get_semaphore("websocket", "/api/status/socket")
+    assert lane_name == "dashboard"
     assert sem is not None
     await sem.acquire()
 
@@ -159,7 +157,7 @@ async def test_bulkhead_websocket_denies_with_http_response_when_lane_full():
 
     try:
         await middleware(
-            {"type": "websocket", "path": "/v2/scrape"},
+            {"type": "websocket", "path": "/api/status/socket"},
             cast(Any, receive),
             cast(Any, send),
         )
@@ -171,7 +169,7 @@ async def test_bulkhead_websocket_denies_with_http_response_when_lane_full():
     assert sent_events[0]["status"] == 429
     assert sent_events[1]["type"] == "websocket.http.response.body"
     payload = json.loads(cast(bytes, sent_events[1]["body"]).decode("utf-8"))
-    assert payload["error"]["code"] == "proxy_overloaded"
+    assert payload == {"detail": "firecrawl-lb is temporarily overloaded in the dashboard lane"}
 
 
 @pytest.mark.asyncio
@@ -217,17 +215,17 @@ async def test_bulkhead_dashboard_websocket_uses_detail_payload_when_lane_full()
     assert payload == {"detail": "firecrawl-lb is temporarily overloaded in the dashboard lane"}
 
 
-def test_get_bulkhead_derives_compact_limit_from_http_limit(monkeypatch: pytest.MonkeyPatch):
+def test_get_bulkhead_disables_proxy_http_lane_when_limit_is_zero(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(bulkhead_module, "_bulkhead", None)
-    bulkhead = bulkhead_module.get_bulkhead(proxy_http_limit=0, proxy_websocket_limit=1, dashboard_limit=1)
+    bulkhead = bulkhead_module.get_bulkhead(proxy_http_limit=0, dashboard_limit=1)
     lane_name, sem = bulkhead.get_semaphore("http", "/v2/scrape")
     assert lane_name == "proxy_http"
     assert sem is None
 
 
 @pytest.mark.asyncio
-async def test_bulkhead_websocket_lane_recovers_after_active_session_exits():
-    bulkhead = _bulkhead(proxy_websocket_limit=1)
+async def test_bulkhead_websocket_dashboard_lane_recovers_after_active_session_exits():
+    bulkhead = _bulkhead(dashboard_limit=1)
     entered = asyncio.Event()
     release = asyncio.Event()
     app_calls = 0
@@ -253,7 +251,7 @@ async def test_bulkhead_websocket_lane_recovers_after_active_session_exits():
     async def first_send(message: dict[str, object]) -> None:
         first_sent_events.append(message)
 
-    first_scope = {"type": "websocket", "path": "/v2/scrape"}
+    first_scope = {"type": "websocket", "path": "/api/status/socket"}
     first_call = asyncio.create_task(
         middleware(
             cast(Any, first_scope),

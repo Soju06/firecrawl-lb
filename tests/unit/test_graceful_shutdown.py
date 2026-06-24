@@ -138,7 +138,7 @@ async def test_in_flight_middleware_skips_websocket_connections() -> None:
 
     middleware = InFlightMiddleware(inner_app)
 
-    scope = {"type": "websocket", "path": "/v2/scrape"}
+    scope = {"type": "websocket", "path": "/api/status/socket"}
 
     async def ws_receive():  # noqa: ANN202
         return {"type": "websocket.connect"}
