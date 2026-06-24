@@ -154,7 +154,7 @@ The application SHALL expose Firecrawl `/v2/*` proxy routes plus health and admi
 
 - **WHEN** the application routes and runtime settings are loaded
 - **THEN** Firecrawl HTTP `/v2/*` proxy routes, health routes, and admin-support routes SHALL be available
-- **AND** legacy upstream WebSocket-specific proxy admission lanes and compact response behavior SHALL NOT be exposed
+- **AND** no legacy upstream WebSocket-specific proxy admission lanes or compact response behavior SHALL be required for the current Firecrawl HTTP proxy surface
 
 ### Requirement: Firecrawl Deployment Artifacts
 
