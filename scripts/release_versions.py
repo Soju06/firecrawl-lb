@@ -108,7 +108,8 @@ def update_project_versions(root: Path, version: str) -> None:
     stable train remains owned by release-please.
     """
 
-    parse_version(version)
+    release = parse_version(version)
+    pypi_version = release.pypi_version
 
     pyproject = root / "pyproject.toml"
     _write_text(
@@ -147,7 +148,7 @@ def update_project_versions(root: Path, version: str) -> None:
     uv_text = uv_lock.read_text(encoding="utf-8")
     uv_text, count = re.subn(
         r'(\[\[package\]\]\nname = "firecrawl-lb"\nversion = ")[^"]+("\nsource = \{ editable = "\." \})',
-        rf"\g<1>{version}\2",
+        rf"\g<1>{pypi_version}\2",
         uv_text,
         count=1,
     )
@@ -186,10 +187,18 @@ def read_project_versions(root: Path) -> dict[str, str]:
 
 
 def assert_project_versions(root: Path, expected_version: str) -> None:
-    mismatches = {name: actual for name, actual in read_project_versions(root).items() if actual != expected_version}
+    expected = parse_version(expected_version)
+    expected_by_file = {
+        "uv.lock": expected.pypi_version,
+    }
+    mismatches = {
+        name: actual
+        for name, actual in read_project_versions(root).items()
+        if actual != expected_by_file.get(name, expected.version)
+    }
     if mismatches:
         detail = ", ".join(f"{name}={actual!r}" for name, actual in sorted(mismatches.items()))
-        raise ValueError(f"release version drift: expected {expected_version!r}; {detail}")
+        raise ValueError(f"release version drift: expected {expected.version!r}; {detail}")
 
 
 def run_git(root: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
