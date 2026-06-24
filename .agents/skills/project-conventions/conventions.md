@@ -31,10 +31,10 @@ def get_user(id: int) -> UserResponse:
 
 ```python
 # Bad — speculative fallback
-api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_KEY") or os.getenv("API_KEY")
+api_key = os.getenv("FIRECRAWL_API_KEY") or os.getenv("FIRECRAWL_KEY") or os.getenv("API_KEY")
 
 # Good — single canonical name, fail fast
-api_key = os.environ["OPENAI_API_KEY"]  # KeyError if missing
+api_key = os.environ["FIRECRAWL_API_KEY"]  # KeyError if missing
 ```
 
 ## 3. Structure & Responsibilities
@@ -158,4 +158,4 @@ class FeatureResponse(BaseModel):
 - Never edit or reorder an already merged migration file. Add a new forward-only migration to correct behavior.
 - If multiple heads are created in parallel branches, add an explicit Alembic merge revision before merge/release so CI sees a single head.
 - Keep `alembic_version` compatibility during cutovers by remapping legacy revision IDs through application migration tooling; do not patch production tables by hand unless a runbook explicitly requires it.
-- Local verification order for migration changes is: `codex-lb-db upgrade head` -> `codex-lb-db check` -> relevant `pytest` suites.
+- Local verification order for migration changes is: `uv run alembic upgrade head` -> `make migration-check` -> relevant `pytest` suites.

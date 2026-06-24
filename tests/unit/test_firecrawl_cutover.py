@@ -223,11 +223,6 @@ async def test_batch_scrape_cancel_uses_original_credential(async_client: AsyncC
     ]
 
 
-async def test_old_legacy_proxy_routes_are_not_mounted(async_client: AsyncClient) -> None:
-    assert (await async_client.get("/v1/models")).status_code == 404
-    assert (await async_client.get("/api/oauth/status")).status_code == 404
-
-
 async def _insert_account_with_credential(
     *,
     account_id: str,

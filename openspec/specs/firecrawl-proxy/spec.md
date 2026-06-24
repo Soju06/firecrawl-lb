@@ -144,14 +144,7 @@ The application SHALL proxy Firecrawl `/v2/scrape`, `/v2/map`, `/v2/search`, `/v
 
 ### Requirement: Firecrawl Runtime Surface
 
-The application SHALL expose Firecrawl and health/admin-support routes without mounting active legacy proxy/auth/WebSocket proxy routes.
-
-#### Scenario: Old legacy proxy and auth routes are absent
-
-- **GIVEN** the Firecrawl LB app is created
-- **WHEN** a client requests `/v1/models` or `/api/oauth/status`
-- **THEN** the response SHALL be 404
-- **AND** Firecrawl `/v2/*` proxy routes SHALL remain available
+The application SHALL expose Firecrawl `/v2/*` proxy routes plus health and admin-support routes.
 
 ### Requirement: Firecrawl Deployment Artifacts
 

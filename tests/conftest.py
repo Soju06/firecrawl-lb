@@ -16,7 +16,7 @@ TEST_DB_PATH = TEST_DB_DIR / "firecrawl-lb.db"
 os.environ["FIRECRAWL_LB_DATABASE_URL"] = os.environ.get(
     "FIRECRAWL_LB_TEST_DATABASE_URL", f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 )
-os.environ["FIRECRAWL_LB_UPSTREAM_BASE_URL"] = "https://example.invalid/backend-api"
+os.environ["FIRECRAWL_LB_UPSTREAM_BASE_URL"] = "https://api.firecrawl.dev"
 os.environ["FIRECRAWL_LB_USAGE_REFRESH_ENABLED"] = "false"
 os.environ["FIRECRAWL_LB_MODEL_REGISTRY_ENABLED"] = "false"
 

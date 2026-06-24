@@ -230,7 +230,7 @@ def create_app() -> FastAPI:
     index_html = static_dir / "index.html"
     static_root = static_dir.resolve()
     frontend_build_hint = "Frontend assets are missing. Run `cd frontend && bun run build`."
-    excluded_prefixes = ("api/", "v1/", "backend-api/", "health")
+    excluded_prefixes = ("api/", "v2/", "health")
 
     def _is_static_asset_path(path: str) -> bool:
         if path.startswith("assets/"):

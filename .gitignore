@@ -42,7 +42,7 @@ frontend/coverage/
 .worktrees/
 certs/
 
-.codex-lb/
+.firecrawl-lb/
 .sisyphus/
 
 .specstory/

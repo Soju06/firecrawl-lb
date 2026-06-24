@@ -4,7 +4,7 @@ description: |
   Project code conventions reference.
   Covers typing, structure, DI, testing, and anti-pattern rules for module implementation.
 metadata:
-  author: codex-lb
+  author: firecrawl-lb
   version: "1.0.0"
 ---
 

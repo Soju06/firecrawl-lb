@@ -22,8 +22,7 @@ bun run dev
 Vite dev server runs on port `5173` by default and proxies API routes to FastAPI:
 
 - `/api/*`
-- `/v1/*`
-- `/backend-api/*`
+- `/v2/*`
 - `/health`
 
 ## Build
