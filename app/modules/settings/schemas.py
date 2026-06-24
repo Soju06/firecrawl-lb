@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from app.modules.shared.schemas import DashboardModel
+from pydantic import BaseModel, ConfigDict
 
 
-class FirecrawlRuntimeSettingsResponse(DashboardModel):
+class FirecrawlRuntimeSettingsResponse(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     refresh_scheduler_enabled: bool
     data_dir: str
     database_url_masked: str
