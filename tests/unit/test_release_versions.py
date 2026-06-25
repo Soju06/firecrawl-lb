@@ -30,28 +30,28 @@ def _write_minimal_release_files(root: Path, version: str, uv_version: str | Non
 
 
 def test_assert_project_versions_accepts_pep440_normalized_uv_lock_for_beta(tmp_path: Path) -> None:
-    _write_minimal_release_files(tmp_path, "1.20.0-beta.2", uv_version="1.20.0b2")
+    _write_minimal_release_files(tmp_path, "0.1.0-beta.1", uv_version="0.1.0b1")
 
-    assert_project_versions(tmp_path, "1.20.0-beta.2")
+    assert_project_versions(tmp_path, "0.1.0-beta.1")
 
 
 def test_update_project_versions_writes_uv_lock_pep440_prerelease(tmp_path: Path) -> None:
-    _write_minimal_release_files(tmp_path, "1.19.0")
+    _write_minimal_release_files(tmp_path, "0.0.0")
 
-    update_project_versions(tmp_path, "1.20.0-beta.2")
+    update_project_versions(tmp_path, "0.1.0-beta.1")
 
-    assert 'version = "1.20.0-beta.2"' in (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
-    assert '__version__ = "1.20.0-beta.2"' in (tmp_path / "app" / "__init__.py").read_text(encoding="utf-8")
+    assert 'version = "0.1.0-beta.1"' in (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
+    assert '__version__ = "0.1.0-beta.1"' in (tmp_path / "app" / "__init__.py").read_text(encoding="utf-8")
     package_json = json.loads((tmp_path / "frontend" / "package.json").read_text(encoding="utf-8"))
-    assert package_json["version"] == "1.20.0-beta.2"
-    assert "version: 1.20.0-beta.2" in (tmp_path / "deploy" / "helm" / "firecrawl-lb" / "Chart.yaml").read_text(
+    assert package_json["version"] == "0.1.0-beta.1"
+    assert "version: 0.1.0-beta.1" in (tmp_path / "deploy" / "helm" / "firecrawl-lb" / "Chart.yaml").read_text(
         encoding="utf-8"
     )
-    assert 'version = "1.20.0b2"' in (tmp_path / "uv.lock").read_text(encoding="utf-8")
+    assert 'version = "0.1.0b1"' in (tmp_path / "uv.lock").read_text(encoding="utf-8")
 
 
 def test_assert_project_versions_rejects_wrong_uv_lock_version(tmp_path: Path) -> None:
-    _write_minimal_release_files(tmp_path, "1.20.0-beta.2", uv_version="1.20.0b1")
+    _write_minimal_release_files(tmp_path, "0.1.0-beta.1", uv_version="0.1.0b0")
 
-    with pytest.raises(ValueError, match="uv.lock='1.20.0b1'"):
-        assert_project_versions(tmp_path, "1.20.0-beta.2")
+    with pytest.raises(ValueError, match="uv.lock='0.1.0b0'"):
+        assert_project_versions(tmp_path, "0.1.0-beta.1")

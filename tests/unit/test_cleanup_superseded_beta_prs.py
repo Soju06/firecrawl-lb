@@ -14,24 +14,24 @@ def test_cleanup_plan_closes_only_superseded_managed_beta_prs() -> None:
     prs = [
         {
             "number": 807,
-            "title": "chore: release v1.19.1-beta.1",
-            "headRefName": "release/beta-1.19.1-beta.1",
+            "title": "chore: release v0.0.1-beta.1",
+            "headRefName": "release/beta-0.0.1-beta.1",
             "headRepositoryOwner": {"login": "Soju06"},
             "labels": [],
             "body": "Synced automatically from release-please PR #806; no manual beta workflow dispatch is required.",
         },
         {
             "number": 827,
-            "title": "chore: release v1.20.0-beta.1",
-            "headRefName": "release/beta-1.20.0-beta.1",
+            "title": "chore: release v0.1.0-beta.1",
+            "headRefName": "release/beta-0.1.0-beta.1",
             "headRepositoryOwner": {"login": "Soju06"},
             "labels": [],
             "body": "Synced automatically from release-please PR #806; no manual beta workflow dispatch is required.",
         },
         {
             "number": 900,
-            "title": "chore: release v1.18.0-beta.1",
-            "headRefName": "release/beta-1.18.0-beta.1",
+            "title": "chore: release v0.0.0-alpha.2",
+            "headRefName": "release/beta-0.0.0-alpha.2",
             "headRepositoryOwner": {"login": "Soju06"},
             "labels": [{"name": "pinned"}],
             "body": "Synced automatically from release-please PR #806; no manual beta workflow dispatch is required.",
@@ -46,8 +46,8 @@ def test_cleanup_plan_closes_only_superseded_managed_beta_prs() -> None:
         },
         {
             "number": 902,
-            "title": "chore: release v1.17.0-beta.1",
-            "headRefName": "release/beta-1.17.0-beta.1",
+            "title": "chore: release v0.0.0-alpha.1",
+            "headRefName": "release/beta-0.0.0-alpha.1",
             "headRepositoryOwner": {"login": "external"},
             "labels": [],
             "body": "Synced automatically from release-please PR #806; no manual beta workflow dispatch is required.",
@@ -56,17 +56,17 @@ def test_cleanup_plan_closes_only_superseded_managed_beta_prs() -> None:
 
     plan = cleanup_plan(
         prs,
-        current_branch="release/beta-1.20.0-beta.1",
-        current_tag="v1.20.0-beta.1",
+        current_branch="release/beta-0.1.0-beta.1",
+        current_tag="v0.1.0-beta.1",
         repo="Soju06/firecrawl-lb",
         repo_owner="Soju06",
         release_pr="806",
     )
 
     assert [action.pr_number for action in plan] == [807]
-    assert plan[0].head_ref == "release/beta-1.19.1-beta.1"
-    assert plan[0].delete_ref_api_path == "repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-1.19.1-beta.1"
-    assert "v1.20.0-beta.1" in plan[0].comment
+    assert plan[0].head_ref == "release/beta-0.0.1-beta.1"
+    assert plan[0].delete_ref_api_path == "repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-0.0.1-beta.1"
+    assert "v0.1.0-beta.1" in plan[0].comment
     assert "release-please PR #806" in plan[0].comment
 
 
@@ -85,9 +85,9 @@ def test_execute_cleanup_comments_closes_and_deletes_branch(monkeypatch: pytest.
         [
             cleanup.CleanupAction(
                 pr_number=807,
-                head_ref="release/beta-1.19.1-beta.1",
-                comment="Superseded by v1.20.0-beta.1",
-                delete_ref_api_path="repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-1.19.1-beta.1",
+                head_ref="release/beta-0.0.1-beta.1",
+                comment="Superseded by v0.1.0-beta.1",
+                delete_ref_api_path="repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-0.0.1-beta.1",
             )
         ],
         repo="Soju06/firecrawl-lb",
@@ -102,14 +102,14 @@ def test_execute_cleanup_comments_closes_and_deletes_branch(monkeypatch: pytest.
             "--repo",
             "Soju06/firecrawl-lb",
             "--body",
-            "Superseded by v1.20.0-beta.1",
+            "Superseded by v0.1.0-beta.1",
         ],
         ["pr", "close", "807", "--repo", "Soju06/firecrawl-lb"],
         [
             "api",
             "-X",
             "DELETE",
-            "repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-1.19.1-beta.1",
+            "repos/Soju06/firecrawl-lb/git/refs/heads/release/beta-0.0.1-beta.1",
         ],
     ]
 
@@ -118,8 +118,8 @@ def test_cleanup_script_dry_run_lists_superseded_pr(tmp_path: Path) -> None:
     prs = [
         {
             "number": 807,
-            "title": "chore: release v1.19.1-beta.1",
-            "headRefName": "release/beta-1.19.1-beta.1",
+            "title": "chore: release v0.0.1-beta.1",
+            "headRefName": "release/beta-0.0.1-beta.1",
             "headRepositoryOwner": {"login": "Soju06"},
             "labels": [],
             "body": "Synced automatically from release-please PR #806; no manual beta workflow dispatch is required.",
@@ -146,9 +146,9 @@ def test_cleanup_script_dry_run_lists_superseded_pr(tmp_path: Path) -> None:
             "--repo-owner",
             "Soju06",
             "--current-branch",
-            "release/beta-1.20.0-beta.1",
+            "release/beta-0.1.0-beta.1",
             "--current-tag",
-            "v1.20.0-beta.1",
+            "v0.1.0-beta.1",
             "--release-pr",
             "806",
             "--dry-run",
@@ -161,7 +161,7 @@ def test_cleanup_script_dry_run_lists_superseded_pr(tmp_path: Path) -> None:
     )
 
     assert "Would close PR #807" in result.stdout
-    assert "release/beta-1.19.1-beta.1" in result.stdout
+    assert "release/beta-0.0.1-beta.1" in result.stdout
     assert json.loads(calls.read_text(encoding="utf-8"))[0:4] == [
         "pr",
         "list",

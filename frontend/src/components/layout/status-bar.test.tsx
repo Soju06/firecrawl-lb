@@ -37,8 +37,8 @@ describe("StatusBar", () => {
     server.use(
       http.get("/api/runtime/version", () =>
         HttpResponse.json({
-          currentVersion: "1.19.0",
-          latestVersion: "1.20.0",
+          currentVersion: "0.0.0",
+          latestVersion: "0.1.0",
           updateAvailable: true,
           checkedAt: "2026-05-26T00:00:00Z",
           source: "github",
@@ -50,7 +50,7 @@ describe("StatusBar", () => {
     renderStatusBar();
 
     const link = await screen.findByRole("link", {
-      name: "New version available: 1.20.0. Open release notes.",
+      name: "New version available: 0.1.0. Open release notes.",
     });
 
     expect(link).toHaveAttribute("href", "https://github.com/Soju06/firecrawl-lb/releases/latest");

@@ -13,8 +13,8 @@ pytestmark = pytest.mark.integration
 class _RuntimeVersionServiceStub:
     async def get_version_status(self) -> RuntimeVersionResponse:
         return RuntimeVersionResponse(
-            current_version="1.19.0",
-            latest_version="1.20.0",
+            current_version="0.0.0",
+            latest_version="0.1.0",
             update_available=True,
             checked_at=datetime(2026, 5, 26, 0, 0, 0),
             source="github",
@@ -32,8 +32,8 @@ async def test_runtime_version_endpoint_returns_camel_case_contract(async_client
 
     assert response.status_code == 200
     assert response.json() == {
-        "currentVersion": "1.19.0",
-        "latestVersion": "1.20.0",
+        "currentVersion": "0.0.0",
+        "latestVersion": "0.1.0",
         "updateAvailable": True,
         "checkedAt": "2026-05-26T00:00:00Z",
         "source": "github",

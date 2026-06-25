@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag (e.g. v1.19.0 or v1.19.0-beta.1)"
+        description: "Release tag (e.g. v0.0.0 or v0.0.0-beta.1)"
         required: true
 
 concurrency:
