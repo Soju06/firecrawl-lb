@@ -178,6 +178,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
+            type=raw,value=${{ needs.release-metadata.outputs.version }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}},enable=${{ needs.release-metadata.outputs.is_prerelease == 'false' }}
             type=semver,pattern={{major}},enable=${{ needs.release-metadata.outputs.is_prerelease == 'false' }}
