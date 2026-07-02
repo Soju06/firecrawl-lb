@@ -34,3 +34,14 @@ Stable release metadata SHALL be promoted only by release-please and SHALL advan
 - **AND** the PR head repository SHALL be the canonical repository
 - **AND** all release-managed version fields SHALL agree on the promoted stable version
 - **AND** all release-managed version fields SHALL have changed from the base ref together
+
+### Requirement: Release Automation Token Fail-Closed Behavior
+
+Release PR automation SHALL fail closed when the release automation token is missing, rather than completing successfully as a no-op.
+
+#### Scenario: Missing token blocks stable and beta PR automation
+
+- **GIVEN** the `RELEASE_PLEASE_TOKEN` secret is unavailable to release automation
+- **WHEN** the release-please or beta release PR sync workflow runs
+- **THEN** the workflow SHALL emit an error and fail
+- **AND** the workflow SHALL NOT report a successful no-op that can be mistaken for a completed release PR sync
