@@ -329,7 +329,7 @@ jobs:
 
       - name: Generate release notes (GitHub)
         id: notes
-        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         env:
           TAG_NAME: ${{ steps.prev_tag.outputs.tag_name }}
           PREV_TAG: ${{ steps.prev_tag.outputs.prev_tag }}
