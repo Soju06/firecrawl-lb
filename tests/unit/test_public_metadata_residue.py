@@ -29,6 +29,7 @@ SKIP_PATHS = {
 
 ALLOW_RESIDUE_PATHS = {
     "tests/unit/test_public_metadata_residue.py",  # this file contains the denylist fixtures themselves
+    ".github/scripts/sync_codex_ok_labels.py",  # CI references Codex review bot/source repo names
 }
 
 ALLOW_EMAIL_PATHS = {
