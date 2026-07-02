@@ -14,7 +14,7 @@
 ### Bug Fixes
 
 * accept normalized uv prerelease versions ([150aee9](https://github.com/Soju06/firecrawl-lb/commit/150aee9eb3d0814252716ea60f716869c3da45a2))
-* **dashboard:** use Firecrawl flame favicon instead of codex-lb compass ([#15](https://github.com/Soju06/firecrawl-lb/issues/15)) ([ff42428](https://github.com/Soju06/firecrawl-lb/commit/ff424284a41ff1e0b03ceb5607d7828ccb8e6a86))
+* **dashboard:** use Firecrawl flame favicon instead of legacy scaffold icon ([#15](https://github.com/Soju06/firecrawl-lb/issues/15)) ([ff42428](https://github.com/Soju06/firecrawl-lb/commit/ff424284a41ff1e0b03ceb5607d7828ccb8e6a86))
 * **firecrawl:** align search scrape reservation estimate ([687225f](https://github.com/Soju06/firecrawl-lb/commit/687225fb6b611ff77a58206d66f249fcdcdfcf4e))
 * **firecrawl:** satisfy usage type checks ([9e0f523](https://github.com/Soju06/firecrawl-lb/commit/9e0f5238d49a01078ca9a1c572c633388703a12a))
 * resolve settings page schema mismatch and retake dashboard screenshots ([958a4bc](https://github.com/Soju06/firecrawl-lb/commit/958a4bcd04b9873452b5a724366837c2e8413302))
