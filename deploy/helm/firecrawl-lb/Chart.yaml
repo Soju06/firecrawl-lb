@@ -4,8 +4,8 @@ description: >-
   Production-grade Helm chart for firecrawl-lb Firecrawl API load balancing,
   usage tracking, account pooling, and observability
 type: application
-version: 0.1.0-beta.1
-appVersion: 0.1.0-beta.1
+version: 0.1.0
+appVersion: 0.1.0
 kubeVersion: '>=1.32.0-0'
 home: https://github.com/soju06/firecrawl-lb
 icon: https://raw.githubusercontent.com/Soju06/firecrawl-lb/main/docs/icon.png
