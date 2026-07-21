@@ -544,7 +544,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ env.DOCKER_CACHE_SCOPE }}
 
       - name: Scan Docker image with Trivy (SARIF)
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: firecrawl-lb:ci
           format: sarif
@@ -563,7 +563,7 @@ jobs:
           category: .github/workflows/ci.yml:docker
 
       - name: Enforce Trivy high-severity gate
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: firecrawl-lb:ci
           format: table
