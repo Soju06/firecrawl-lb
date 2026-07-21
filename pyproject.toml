@@ -1,6 +1,6 @@
 [project]
 name = "firecrawl-lb"
-version = "0.1.0-beta.2"
+version = "0.1.0"
 description = "Firecrawl load balancer and proxy with usage dashboard"
 readme = "README.md"
 license = { file = "LICENSE" }
