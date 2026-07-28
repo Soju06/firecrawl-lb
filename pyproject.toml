@@ -73,7 +73,7 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "pytest-timeout>=2.4.0",
     "httpx>=0.28.1",
-    "ruff>=0.15.19",
+    "ruff==0.16.0",
     "ty==0.0.63",
 
     "pytest-xdist>=3.8.0",

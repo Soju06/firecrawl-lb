@@ -33,8 +33,9 @@ frontend-build: frontend-install
 
 .PHONY: lint typecheck
 lint:
-	uvx ruff check .
-	uvx ruff format --check .
+	uv sync --dev --frozen
+	uv run --frozen ruff check .
+	uv run --frozen ruff format --check .
 
 typecheck:
 	uv sync --dev --frozen
