@@ -13,10 +13,12 @@
 def get_user(id: int) -> dict:
     return {"name": user.name, "created": user.created_at.timestamp()}
 
+
 # Good
 class UserResponse(BaseModel):
     name: str
     created_at: datetime  # ISO 8601
+
 
 def get_user(id: int) -> UserResponse:
     return UserResponse(name=user.name, created_at=user.created_at)
@@ -79,6 +81,7 @@ async def session():
         yield session
         await session.rollback()
 
+
 # Assert public behavior, not internals
 async def test_create_key(client: AsyncClient):
     resp = await client.post("/api/keys", json={"name": "test"})
@@ -103,6 +106,7 @@ class FeatureContext:
     repository: FeatureRepository
     service: FeatureService
 
+
 async def get_feature_context(
     session: AsyncSession = Depends(get_session),
 ) -> FeatureContext:
@@ -122,9 +126,11 @@ from app.dependencies import get_feature_context, FeatureContext
 
 router = APIRouter(prefix="/<feature>", tags=["<feature>"])
 
+
 @router.get("/")
 async def list_items(ctx: FeatureContext = Depends(get_feature_context)):
     return await ctx.service.list_items()
+
 
 # app/modules/<feature>/service.py
 class FeatureService:
@@ -135,6 +141,7 @@ class FeatureService:
         items = await self._repo.get_all()
         return [FeatureResponse.model_validate(item) for item in items]
 
+
 # app/modules/<feature>/repository.py
 class FeatureRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -143,6 +150,7 @@ class FeatureRepository:
     async def get_all(self) -> Sequence[FeatureModel]:
         result = await self._session.execute(select(FeatureModel))
         return result.scalars().all()
+
 
 # app/modules/<feature>/schemas.py
 class FeatureResponse(BaseModel):
