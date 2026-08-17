@@ -41,6 +41,8 @@ WORKDIR /app
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --only-upgrade \
         libc-bin libc6 libcap2 libsystemd0 libudev1 sed \
+        bsdutils libblkid1 liblastlog2-2 libmount1 libsmartcols1 libuuid1 \
+        login mount util-linux \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip uninstall -y pip setuptools wheel || true \
