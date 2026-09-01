@@ -43,6 +43,7 @@ RUN apt-get update \
         libc-bin libc6 libcap2 libsystemd0 libudev1 sed \
         bsdutils libblkid1 liblastlog2-2 libmount1 libsmartcols1 libuuid1 \
         login mount util-linux \
+        libssl3t64 openssl openssl-provider-legacy \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip uninstall -y pip setuptools wheel || true \
